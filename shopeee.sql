@@ -152,7 +152,8 @@ CREATE TABLE `items` (
   `highlighted` tinyint(1) NOT NULL,
   `active` tinyint(1) NOT NULL,
   `unlimited_images` tinyint(1) NOT NULL,
-  `description` text NOT NULL
+  `description` text NOT NULL,
+  `item_status_id` int(11) NOT NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -161,7 +162,8 @@ CREATE TABLE `items` (
 --
 ALTER TABLE `items`
   ADD PRIMARY KEY (`item_id`),
-  ADD KEY `brand` (`brand_id`);
+  ADD KEY `brand` (`brand_id`),
+  ADD KEY `status` (`item_status_id`);
 
 --
 -- AUTO_INCREMENT for table `items`
@@ -174,7 +176,8 @@ ALTER TABLE `items`
 -- Constraints for table `items`
 --
 ALTER TABLE `items`
-  ADD CONSTRAINT `brand` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`brand_id`);
+  ADD CONSTRAINT `brand` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`brand_id`),
+  ADD CONSTRAINT `status` FOREIGN KEY (`item_status_id`) REFERENCES `item_statuses` (`status_id`);
 
 -- --------------------------------------------------------
 
@@ -240,7 +243,7 @@ CREATE TABLE `order_items` (
 -- Table structure for table `order_status`
 --
 
-CREATE TABLE `order_status` (
+CREATE TABLE `order_statuses` (
   `status_id` int(11) NOT NULL,
   `name` varchar(30) NOT NULL,
   `description` text NOT NULL
@@ -249,15 +252,49 @@ CREATE TABLE `order_status` (
 --
 -- Indexes for table `order_status`
 --
-ALTER TABLE `order_status`
+ALTER TABLE `order_statuses`
   ADD PRIMARY KEY (`status_id`);
 
 
 --
 -- AUTO_INCREMENT for table `order_status`
 --
-ALTER TABLE `order_status`
+ALTER TABLE `order_statuses`
   MODIFY `status_id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+
+
+
+
+--
+-- Table structure for table `order_status`
+--
+
+CREATE TABLE `item_statuses` (
+  `status_id` int(11) NOT NULL,
+  `item_status_name` varchar(30) NOT NULL,
+  `item_status_description` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Indexes for table `order_status`
+--
+ALTER TABLE `item_statuses`
+  ADD PRIMARY KEY (`status_id`);
+
+
+--
+-- AUTO_INCREMENT for table `order_status`
+--
+ALTER TABLE `item_statuses`
+  MODIFY `status_id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+
+
+
+
 
 
 
