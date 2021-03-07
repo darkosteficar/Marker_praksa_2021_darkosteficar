@@ -28,9 +28,7 @@ if (isset($_POST['search'])) {
             <div class="content">
                 <?php
                 if (isset($_POST['create'])) {
-                    if (createAttribute()) {
-                        $_SESSION['success'] = 'Atribut je uspješno dodan!';
-                    } else {
+                    if (!createAttribute()) {
                         echo '<div class="alert alert-danger" role="alert">
                         Dogodila se greška.
                         </div>';
@@ -46,15 +44,18 @@ if (isset($_POST['search'])) {
                         $stmtImages->execute();
                         $_SESSION['success'] = 'Atribut ' . $name . ' je uspješno promjenjen!';
                         header("location: attributes.php");
+                        exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
-                    $stmt = $conn->prepare("DELETE FROM order_statuses WHERE id = ?");
+                    $stmt = $conn->prepare("DELETE FROM attributes WHERE id = ?");
                     $stmt->bind_param('i', $_GET['delete']);
                     if ($stmt->execute()) {
-                        $_SESSION['success'] = 'Status je uspješno izbrisan!';
+                        $_SESSION['success'] = 'Atribut je uspješno izbrisan!';
+                        header("location: attributes.php");
+                        exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
                     }
@@ -171,7 +172,7 @@ if (isset($_POST['search'])) {
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 1;
+                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 3;
                                             if (isset($searchKey)) {
                                                 $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
                                                 $sql = "SELECT * FROM attributes WHERE name LIKE ?"; // SQL with parameters

@@ -39,14 +39,22 @@ if (isset($_POST['search'])) {
                 }
                 if (isset($_POST['edit'])) {
                     if (isset($_GET['id'])) {
-                        $name = $_POST['name'];
-                        $description = $_POST['description'];
+                        $name = htmlentities($_POST['name']);
+                        $description = htmlentities($_POST['description']);
                         $id = $_GET['id'];
-                        $stmtImages = $conn->prepare("UPDATE order_statuses SET name = ?,description = ? WHERE id = ? ");
-                        $stmtImages->bind_param("ssi", $name, $description, $id);
+                        $parent = htmlentities($_POST['parent']);
+                        $active = htmlentities($_POST['active']);
+                        if ($parent == 'np') {
+                            $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ? WHERE id = ? ");
+                            $stmtImages->bind_param("ssii", $name, $description, $active, $id);
+                        } else {
+                            $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ?,parent_id = ? WHERE id = ? ");
+                            $stmtImages->bind_param("ssiii", $name, $description, $active,  $parent, $id);
+                        }
                         $stmtImages->execute();
                         $_SESSION['success'] = 'Kategorija ' . $name . ' je uspješno promjenjena!';
                         header("location: categories.php");
+                        exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
                     }
@@ -88,6 +96,7 @@ if (isset($_POST['search'])) {
                                     <div class="form-group ">
                                         <label for="inputState">Nadkategorija</label>
                                         <select id="inputState" class="form-control" style="background-color: gray;" name="parent">
+
                                             <option value="0">Glavna kategorija</option>
                                             <?php
                                             $stmt = $conn->prepare("SELECT * FROM categories");
@@ -150,6 +159,7 @@ if (isset($_POST['search'])) {
                                             <div class="form-group ">
                                                 <label for="inputState">Nadkategorija</label>
                                                 <select id="inputState" class="form-control" style="background-color: gray;" name="parent">
+                                                    <option value="np">Nemoj mijenjati</option>
                                                     <option value="0">Glavna kategorija</option>
                                                     <?php
                                                     $stmt = $conn->prepare("SELECT * FROM categories");
@@ -275,11 +285,11 @@ if (isset($_POST['search'])) {
                                                             </button></a>
                                                     </td>
                                                     <td class="td-actions text-center">
-                                                        <button type="button" rel="tooltip" class="btn btn-danger btn-sm btn-icon " data-toggle="modal" data-target="#exampleModal1<?php echo $row['id'] ?>">
+                                                        <button type="button" rel="tooltip" class="btn btn-danger btn-sm btn-icon " data-toggle="modal" data-target="#exampleModal<?php echo $row['id'] ?>">
                                                             <i class="tim-icons icon-simple-remove"></i>
                                                         </button>
                                                     </td>
-                                                    <?php include("includes/modals-statuses.php") ?>
+                                                    <?php include("includes/modals-categories.php") ?>
 
                                                 </tr>
                                             <?php

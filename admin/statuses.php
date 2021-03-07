@@ -30,6 +30,7 @@ if (isset($_POST['search'])) {
                 <?php
                 if (isset($_POST['create'])) {
                     if (createStatus()) {
+                        unset($_SESSION['success']);
                         $_SESSION['success'] = 'Status je uspješno dodan!';
                     } else {
                         echo '<div class="alert alert-danger" role="alert">
@@ -47,10 +48,9 @@ if (isset($_POST['search'])) {
                         $stmtImages->execute();
                         $_SESSION['success'] = 'Status ' . $name . ' je uspješno promjenjen!';
                         header("location: statuses.php");
+                        exit();
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">
-Nije odabrana kategorija za promjenu.
-</div>';
+                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
@@ -58,6 +58,8 @@ Nije odabrana kategorija za promjenu.
                     $stmt->bind_param('i', $_GET['delete']);
                     if ($stmt->execute()) {
                         $_SESSION['success'] = 'Status je uspješno izbrisan!';
+                        header("location: statuses.php");
+                        exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
                     }
@@ -172,7 +174,7 @@ Nije odabrana kategorija za promjenu.
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 1;
+                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
                                             if (isset($searchKey)) {
                                                 $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
                                                 $sql = "SELECT * FROM order_statuses WHERE name LIKE ?"; // SQL with parameters

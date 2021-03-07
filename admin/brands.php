@@ -49,11 +49,10 @@ if (isset($_POST['search'])) {
                         $stmt->bind_param("ssi", $name, $description, $id);
                         $stmt->execute();
                         $_SESSION['success'] = 'Brand ' . $name . ' je uspješno promjenjen!';
-                        header("location: brands.php");
+                        header("location:" . $_SERVER['HTTP_REFERER']);
+                        exit();
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">
-Nije odabrana kategorija za promjenu.
-</div>';
+                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
@@ -61,6 +60,8 @@ Nije odabrana kategorija za promjenu.
                     $stmt->bind_param('i', $_GET['delete']);
                     if ($stmt->execute()) {
                         $_SESSION['success'] = 'Brand je uspješno izbrisan!';
+                        header("location: brands.php");
+                        exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
                     }
@@ -182,7 +183,7 @@ Nije odabrana kategorija za promjenu.
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 1;
+                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
                                             if (isset($searchKey)) {
                                                 $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
                                                 $sql = "SELECT * FROM brands WHERE name LIKE ?"; // SQL with parameters
@@ -227,7 +228,8 @@ Nije odabrana kategorija za promjenu.
                                                         <?php echo $row['description'] ?>
                                                     </td>
                                                     <td class="td-actions text-center">
-                                                        <a href="brands.php?id=<?php echo $row['id'] ?>"><button type="button" rel="tooltip" class="btn btn-success btn-sm btn-icon">
+                                                        <a href="brands.php?id=<?php echo $row['id'];
+                                                                                if (isset($_GET['page'])) echo "&page=" . $_GET['page']; ?>"><button type="button" rel="tooltip" class="btn btn-success btn-sm btn-icon">
                                                                 <i class="tim-icons icon-settings"></i>
                                                             </button></a>
                                                     </td>

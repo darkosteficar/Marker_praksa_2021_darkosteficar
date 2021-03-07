@@ -6,8 +6,10 @@ ob_start();
 
 if (isset($_POST['search'])) {
     $searchKey = $_POST['key'];
-} else if (isset($_GET['search'])) {
+    $searchField = $_POST['field'];
+} else if (isset($_GET['search']) && isset($_GET['field'])) {
     $searchKey = $_GET['search'];
+    $searchField = $_GET['field'];
 }
 
 ?>
@@ -27,6 +29,8 @@ if (isset($_GET['edit'])) {
     header("location: $prevUrl ");
     unset($_SESSION['prevUrl']);
 }
+
+
 ?>
 
 <body class="">
@@ -51,20 +55,21 @@ if (isset($_GET['edit'])) {
             <div class="content">
                 <?php
                 if (isset($_GET['delete'])) {
-                    $user_id = $_GET['delete'];
-                    $sql = "DELETE FROM users WHERE user_id = ? ";
+                    $item = $_GET['delete'];
+                    $sql = "DELETE FROM items WHERE id = ? ";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-
-                    $sql = "DELETE FROM comments WHERE comment_author = ? ";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $prevUrl = $_SESSION['prevUrl'];
-                    header("location: $prevUrl ");
-                    unset($_SESSION['prevUrl']);
-                    echo '<div class="alert alert-success" role="alert">Korisnik uspješno obrisan.</div>';
+                    $stmt->bind_param("i", $item);
+                    if ($stmt->execute()) {
+                        $_SESSION['success'] = 'Proizvod je uspješno izbrisan!';
+                        header("location: items.php");
+                        exit();
+                    } else {
+                        echo '<div class="alert alert-danger" role="alert"> Dogodila se pogreška. </div>';
+                    }
+                }
+                if (isset($_SESSION['success'])) {
+                    echo '<div class="alert alert-success" role="alert">' .  $_SESSION['success'] . '</div>';
+                    unset($_SESSION['success']);
                 }
                 ?>
                 <div class="row">
@@ -87,7 +92,7 @@ if (isset($_GET['edit'])) {
                             </tr>
                         </thead>
                         <tbody>
-                            <form action="products.php" method="post" enctype="multipart/form-data">
+                            <form action="items.php" method="post" enctype="multipart/form-data">
                                 <div class="container">
                                     <div class="row align-items-center justify-content-start">
                                         <div class="col-sm-3">
@@ -102,6 +107,9 @@ if (isset($_GET['edit'])) {
                                                 <select id="inputState" class="form-control" style="background-color: black;" name="field">
                                                     <option value="name">Ime</option>
                                                     <option value="surname">Brand</option>
+                                                    <option value="highlighted">Izdvojeno</option>
+                                                    <option value="active">Aktivno</option>
+                                                    <option value="allow_resupply">Opskrba</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -109,10 +117,10 @@ if (isset($_GET['edit'])) {
                                 </div>
                             </form>
                             <?php
-                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
+                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
                             if (isset($searchKey)) {
                                 $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                $sql = "SELECT * FROM orders WHERE name LIKE ?"; // SQL with parameters
+                                $sql = "SELECT items.name,items.id,items.base_price,brands.name FROM items INNER JOIN brands ON brands.id = items.brand_id WHERE items.$searchField LIKE ?"; // SQL with parameters
                                 $stmt = $conn->prepare($sql);
                                 $stmt->bind_param('s', $search);
                             } else {
@@ -131,7 +139,7 @@ if (isset($_GET['edit'])) {
                             // Offset
                             $paginationStart = ($page - 1) * $limit;
                             if (isset($searchKey)) {
-                                $sql = $conn->prepare("SELECT * FROM orders WHERE name LIKE ? LIMIT $paginationStart, $limit");
+                                $sql = $conn->prepare("SELECT items.name,items.discount,items.active,items.highlighted,items.id,items.base_price,items.description,items.avaliable_stock,items.allow_resupply,brands.name AS brand FROM items INNER JOIN brands ON brands.id = items.brand_id WHERE items.$searchField LIKE ? LIMIT $paginationStart, $limit");
                                 $sql->bind_param("s", $search);
                                 $sql->execute();
                                 $resultsOrders = $sql->get_result();
@@ -156,12 +164,14 @@ if (isset($_GET['edit'])) {
                                     <td><?php echo $row['highlighted'] ?></td>
                                     <td><?php echo $row['active'] ?></td>
                                     <td class="td-actions text-center">
-                                        <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon" data-toggle="modal" data-target="#exampleModal3<?php echo $row['id'] ?>">
-                                            <i class="tim-icons icon-settings"></i>
-                                        </button>
+                                        <a href="edit-item.php?edit=<?php echo $row['id'] ?>">
+                                            <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon" ">
+                                            <i class=" tim-icons icon-settings"></i>
+                                            </button>
+                                        </a>
                                     </td>
                                     <td class="td-actions text-center">
-                                        <a href="order_items.php?order=<?php echo $row['id'] ?>">
+                                        <a href="item-images.php?item=<?php echo $row['id'] ?>">
                                             <button type="button" rel="tooltip" class="btn btn-success btn-sm btn-icon">
                                                 <i class="tim-icons  icon-badge"></i>
                                             </button>
@@ -172,7 +182,7 @@ if (isset($_GET['edit'])) {
                                             <i class="tim-icons icon-simple-remove"></i>
                                         </button>
                                     </td>
-                                    <?php include("includes/modals-users.php") ?>
+                                    <?php include("includes/modals-items.php") ?>
                                 </tr>
                             <?php
                             }
@@ -205,7 +215,7 @@ if (isset($_GET['edit'])) {
                                 <li class="page-item <?php if ($page == $i) {
                                                             echo 'active';
                                                         }  ?>">
-                                    <a class="page-link" href="<?php echo 'statuses.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
+                                    <a class="page-link" href="<?php echo 'items.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
                                         <?php if ($page == $i) {
                                         ?>
                                             <span class="sr-only">(current)</span>
@@ -256,7 +266,7 @@ if (isset($_GET['edit'])) {
                                 <li class="page-item <?php if ($page == $i) {
                                                             echo 'active';
                                                         }  ?>">
-                                    <a class="page-link" href="<?php echo 'statuses.php?page=' . $i ?>"><?php echo $i ?>
+                                    <a class="page-link" href="<?php echo 'items.php?page=' . $i ?>"><?php echo $i ?>
                                         <?php if ($page == $i) {
                                         ?>
                                             <span class="sr-only">(current)</span>

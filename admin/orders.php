@@ -6,8 +6,10 @@ ob_start();
 
 if (isset($_POST['search'])) {
     $searchKey = $_POST['key'];
-} else if (isset($_GET['search'])) {
+    $searchField = $_POST['field'];
+} else if (isset($_GET['search']) && isset($_GET['field'])) {
     $searchKey = $_GET['search'];
+    $searchField = $_GET['field'];
 }
 
 ?>
@@ -85,7 +87,7 @@ Korisnik uspješno obrisan.
                             </tr>
                         </thead>
                         <tbody>
-                            <form action="buyers.php" method="post" enctype="multipart/form-data">
+                            <form action="orders.php" method="post" enctype="multipart/form-data">
                                 <div class="container">
                                     <div class="row align-items-center justify-content-start">
 
@@ -103,6 +105,7 @@ Korisnik uspješno obrisan.
                                                     <option value="surname">Prezime</option>
                                                     <option value="email">Email</option>
                                                     <option value="address">Adresa</option>
+
                                                 </select>
                                             </div>
                                         </div>
@@ -113,7 +116,7 @@ Korisnik uspješno obrisan.
                             $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
                             if (isset($searchKey)) {
                                 $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                $sql = "SELECT * FROM orders WHERE name LIKE ?"; // SQL with parameters
+                                $sql = "SELECT * FROM orders WHERE $searchField LIKE ?"; // SQL with parameters
                                 $stmt = $conn->prepare($sql);
                                 $stmt->bind_param('s', $search);
                             } else {
@@ -132,7 +135,7 @@ Korisnik uspješno obrisan.
                             // Offset
                             $paginationStart = ($page - 1) * $limit;
                             if (isset($searchKey)) {
-                                $sql = $conn->prepare("SELECT * FROM orders WHERE name LIKE ? LIMIT $paginationStart, $limit");
+                                $sql = $conn->prepare("SELECT orders.id,orders.name,orders.surname,orders.address,orders.email,orders.time,order_statuses.name AS status FROM orders INNER JOIN order_statuses ON order_statuses.id = orders.id WHERE orders.$searchField LIKE ? LIMIT $paginationStart, $limit");
                                 $sql->bind_param("s", $search);
                                 $sql->execute();
                                 $resultsOrders = $sql->get_result();
@@ -174,7 +177,7 @@ Korisnik uspješno obrisan.
                                         </button>
 
                                     </td>
-                                    <?php include("includes/modals-users.php") ?>
+                                    <?php include("includes/modals-orders.php") ?>
                                 </tr>
                             <?php
                             }

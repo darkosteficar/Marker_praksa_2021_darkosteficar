@@ -15,6 +15,47 @@ $url = $_SERVER['REQUEST_URI'];
         </a>
     </div>
     <ul class="nav">
+
+        <li <?php if (strpos($url, 'products')) {
+                echo 'class="active"';
+            } ?>>
+            <a href="items.php">
+                <i class="tim-icons icon-tv-2"></i>
+                <p>Proizvodi</p>
+            </a>
+        </li>
+        <li <?php if (strpos($url, 'add-product')) {
+                echo 'class="active"';
+            } ?>>
+            <a href="add-item.php">
+                <i class="tim-icons icon-tv-2"></i>
+                <p>Novi proizvod</p>
+            </a>
+        </li>
+        <li <?php if (strpos($url, 'buyers')) {
+                echo 'class="active"';
+            } ?>>
+            <a href="buyers.php">
+                <i class="tim-icons icon-single-02"></i>
+                <p>Kupci</p>
+            </a>
+        </li>
+        <li <?php if (strpos($url, 'orders')) {
+                echo 'class="active"';
+            } ?>>
+            <a href="orders.php">
+                <i class="tim-icons icon-single-02"></i>
+                <p>Narudžbe</p>
+            </a>
+        </li>
+        <li <?php if (strpos($url, 'attributes')) {
+                echo 'class="active"';
+            } ?>>
+            <a href="attributes.php">
+                <i class="tim-icons icon-single-02"></i>
+                <p>Atributi</p>
+            </a>
+        </li>
         <li <?php if (strpos($url, 'brands.php')) {
                 echo 'class="active"';
             } ?>">
@@ -39,38 +80,7 @@ $url = $_SERVER['REQUEST_URI'];
                 <p>Statusi</p>
             </a>
         </li>
-        <li <?php if (strpos($url, 'products')) {
-                echo 'class="active"';
-            } ?>>
-            <a href="products.php">
-                <i class="tim-icons icon-single-02"></i>
-                <p>Proizvodi</p>
-            </a>
-        </li>
-        <li <?php if (strpos($url, 'buyers')) {
-                echo 'class="active"';
-            } ?>>
-            <a href="buyers.php">
-                <i class="tim-icons icon-single-02"></i>
-                <p>Kupci</p>
-            </a>
-        </li>
-        <li <?php if (strpos($url, 'attributes')) {
-                echo 'class="active"';
-            } ?>>
-            <a href="attributes.php">
-                <i class="tim-icons icon-single-02"></i>
-                <p>Atributi</p>
-            </a>
-        </li>
-        <li <?php if (strpos($url, 'orders')) {
-                echo 'class="active"';
-            } ?>>
-            <a href="orders.php">
-                <i class="tim-icons icon-single-02"></i>
-                <p>Narudžbe</p>
-            </a>
-        </li>
+
 
 
     </ul>

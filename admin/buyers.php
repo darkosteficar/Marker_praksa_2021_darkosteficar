@@ -132,11 +132,10 @@ if ($sessionRole != 'admin') {
                                 $paginationStart = ($page - 1) * $limit;
 
                                 if (isset($searchKey)) {
-                                    $sql = $conn->prepare("SELECT * FROM buyers WHERE name LIKE '?' LIMIT $paginationStart, $limit");
+                                    $stmt = $conn->prepare("SELECT * FROM buyers WHERE $field LIKE ? LIMIT $paginationStart,$limit");
                                     $stmt->bind_param('s', $search);
-                                    $sql->execute();
-                                    $resultsBuyers = $sql->get_result();
-                                    echo $search;
+                                    $stmt->execute();
+                                    $resultsBuyers = $stmt->get_result();
                                 } else {
                                     $sql = $conn->prepare("SELECT * FROM buyers LIMIT $paginationStart, $limit");
                                     $sql->execute();

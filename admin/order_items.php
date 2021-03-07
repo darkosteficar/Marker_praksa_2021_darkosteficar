@@ -15,14 +15,18 @@ if (!isset($_GET['order'])) {
 
 <?php
 if (isset($_POST['edit'])) {
-    if (empty(!$_POST['id']) && empty(!$_POST['name']) && empty(!$_POST['surname']) && empty(!$_POST['email']) && empty(!$_POST['address'])) {
+    if (empty(!$_POST['price']) && empty(!$_POST['quantity'])) {
         $id = $_POST['id'];
-        $stmtImages = $conn->prepare("UPDATE buyers SET name = ?,surname = ?,email=? , address = ? WHERE id = ? ");
-        $stmtImages->bind_param("ssssi", $_POST['name'], $_POST['surname'], $_POST['email'], $_POST['address'], $_POST['id']);
-        $stmtImages->execute();
-        $prevUrl = $_SESSION['prevUrl'];
-        header("location: $prevUrl ");
-        unset($_SESSION['prevUrl']);
+        $order_id = $_POST['order_id'];
+        $stmtImages = $conn->prepare("UPDATE order_items SET price = ?,quantity = ? WHERE item_id = ? AND order_id = ?");
+        $stmtImages->bind_param("diii", $_POST['price'], $_POST['quantity'], $id, $order_id);
+        if ($stmtImages->execute()) {
+            $_SESSION['success'] = 'Proizvod je uspješno promjenjen!';
+            header("location: order_items.php?order=" . $order_id);
+            exit();
+        } else {
+            echo '<div class="alert alert-danger" role="alert">Dogodila se pogreška.</div>';
+        }
     } else {
         echo '<div class="alert alert-danger" role="alert">Sva polja za promjenu nisu popunjena.</div>';
     }
@@ -31,8 +35,19 @@ $sessionRole = 'admin';
 if ($sessionRole != 'admin') {
     header('location: brands.php');
 }
-?>
 
+if (isset($_GET['delete'])) {
+    $user_id = $_GET['delete'];
+    $sql = "DELETE FROM buyers WHERE id = ? ";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $prevUrl = $_SESSION['prevUrl'];
+    header("location: $prevUrl ");
+    unset($_SESSION['prevUrl']);
+    echo '<div class="alert alert-success" role="alert">Kupac uspješno obrisan.</div>';
+}
+?>
 
 <body class="">
     <div class="wrapper">
@@ -55,19 +70,7 @@ if ($sessionRole != 'admin') {
 
             <!-- End Navbar -->
             <div class="content">
-                <?php
-                if (isset($_GET['delete'])) {
-                    $user_id = $_GET['delete'];
-                    $sql = "DELETE FROM buyers WHERE id = ? ";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $prevUrl = $_SESSION['prevUrl'];
-                    header("location: $prevUrl ");
-                    unset($_SESSION['prevUrl']);
-                    echo '<div class="alert alert-success" role="alert">Kupac uspješno obrisan.</div>';
-                }
-                ?>
+
                 <h3>Popis proizvoda iz ove narudžbe</h3>
                 <div class="row">
                     <table class="table  table-striped table-bordered table-hover">
@@ -83,6 +86,12 @@ if ($sessionRole != 'admin') {
                             </tr>
                         </thead>
                         <tbody>
+                            <?php
+                            if (isset($_SESSION['success'])) {
+                                echo '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
+                                unset($_SESSION['success']);
+                            }
+                            ?>
                             <div class="card-body">
                                 <form action="buyers.php" method="post" enctype="multipart/form-data">
                                     <div class="container">
@@ -169,7 +178,7 @@ if ($sessionRole != 'admin') {
                                                 <i class="tim-icons icon-simple-remove"></i>
                                             </button>
                                         </td>
-                                        <?php include("includes/modals-buyers.php") ?>
+                                        <?php include("includes/modals-order_items.php") ?>
                                     </tr>
                                 <?php
                                 }
