@@ -13,25 +13,8 @@ if (isset($_POST['search'])) {
 }
 
 ?>
-<?php
-if (isset($_GET['edit'])) {
-    $role = $_GET['role'];
-    if ($role == 'Admin') {
-        $role = 'Standard';
-    } else {
-        $role = 'Admin';
-    }
-    $user_id = $_GET['edit'];
-    $stmtImages = $conn->prepare("UPDATE users SET user_role = ? WHERE user_id = ? ");
-    $stmtImages->bind_param("si", $role, $user_id);
-    $stmtImages->execute();
-    $prevUrl = $_SESSION['prevUrl'];
-    header("location: $prevUrl ");
-    unset($_SESSION['prevUrl']);
-}
 
 
-?>
 
 <body class="">
     <div class="wrapper">
@@ -56,8 +39,7 @@ if (isset($_GET['edit'])) {
                 <?php
                 if (isset($_GET['delete'])) {
                     $item = $_GET['delete'];
-                    $sql = "DELETE FROM items WHERE id = ? ";
-                    $stmt = $conn->prepare($sql);
+                    $stmt = $conn->prepare("DELETE FROM items WHERE id = ?");
                     $stmt->bind_param("i", $item);
                     if ($stmt->execute()) {
                         $_SESSION['success'] = 'Proizvod je uspješno izbrisan!';
@@ -65,6 +47,7 @@ if (isset($_GET['edit'])) {
                         exit();
                     } else {
                         echo '<div class="alert alert-danger" role="alert"> Dogodila se pogreška. </div>';
+                        echo $conn->error;
                     }
                 }
                 if (isset($_SESSION['success'])) {

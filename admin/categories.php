@@ -3,11 +3,7 @@ include_once("includes/db.php");
 include_once("includes/functions.php");
 include_once("includes/admin-header.php");
 ob_start();
-if (isset($_POST['search'])) {
-    $searchKey = $_POST['key'];
-} else if (isset($_GET['search'])) {
-    $searchKey = $_GET['search'];
-}
+$searchKey = searchKeyNoField();
 ?>
 
 <body class="">

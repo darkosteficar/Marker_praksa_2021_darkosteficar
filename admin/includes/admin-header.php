@@ -38,6 +38,11 @@
     <script>
 
     </script>
+    <style>
+        .dropdown-content2 {
+            display: none;
+        }
+    </style>
 
 </head>
 

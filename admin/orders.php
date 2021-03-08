@@ -14,24 +14,6 @@ if (isset($_POST['search'])) {
 
 ?>
 
-<?php
-if (isset($_GET['edit'])) {
-    $role = $_GET['role'];
-    if ($role == 'Admin') {
-        $role = 'Standard';
-    } else {
-        $role = 'Admin';
-    }
-    $user_id = $_GET['edit'];
-    $stmtImages = $conn->prepare("UPDATE users SET user_role = ? WHERE user_id = ? ");
-    $stmtImages->bind_param("si", $role, $user_id);
-    $stmtImages->execute();
-    $prevUrl = $_SESSION['prevUrl'];
-    header("location: $prevUrl ");
-    unset($_SESSION['prevUrl']);
-}
-
-?>
 
 <body class="">
     <div class="wrapper">
@@ -50,26 +32,7 @@ if (isset($_GET['edit'])) {
             ?>
             <!-- End Navbar -->
             <div class="content">
-                <?php
-                if (isset($_GET['delete'])) {
-                    $user_id = $_GET['delete'];
-                    $sql = "DELETE FROM users WHERE user_id = ? ";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
 
-                    $sql = "DELETE FROM comments WHERE comment_author = ? ";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $prevUrl = $_SESSION['prevUrl'];
-                    header("location: $prevUrl ");
-                    unset($_SESSION['prevUrl']);
-                    echo '<div class="alert alert-success" role="alert">
-Korisnik uspješno obrisan.
-</div>';
-                }
-                ?>
                 <div class="row">
                     <table class="table table-striped table-bordered table-hover">
                         <thead>

@@ -4,12 +4,8 @@ include_once("includes/functions.php");
 include_once("includes/admin-header.php");
 ob_start();
 
-
-if (isset($_POST['search'])) {
-    $searchKey = $_POST['key'];
-} else if (isset($_GET['search'])) {
-    $searchKey = $_GET['search'];
-}
+$searchKey = searchKeyNoField();
+$main = 'brands';
 
 ?>
 
@@ -35,36 +31,18 @@ if (isset($_POST['search'])) {
                     if (createBrand()) {
                         $_SESSION['success'] = 'Brand je uspješno dodan!';
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">
-                        Dogodila se greška.
-                        </div>';
+                        echo '<div class="alert alert-danger" role="alert">Dogodila se greška.</div>';
                     }
                 }
                 if (isset($_POST['edit'])) {
                     if (isset($_GET['id'])) {
-                        $name = $_POST['name'];
-                        $description = $_POST['description'];
-                        $id = $_GET['id'];
-                        $stmt = $conn->prepare("UPDATE brands SET name = ?,description = ? WHERE id = ? ");
-                        $stmt->bind_param("ssi", $name, $description, $id);
-                        $stmt->execute();
-                        $_SESSION['success'] = 'Brand ' . $name . ' je uspješno promjenjen!';
-                        header("location:" . $_SERVER['HTTP_REFERER']);
-                        exit();
+                        updateBrand();
                     } else {
                         echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
-                    $stmt = $conn->prepare("DELETE FROM brands WHERE id = ?");
-                    $stmt->bind_param('i', $_GET['delete']);
-                    if ($stmt->execute()) {
-                        $_SESSION['success'] = 'Brand je uspješno izbrisan!';
-                        header("location: brands.php");
-                        exit();
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
-                    }
+                    deleteBrand();
                 }
 
                 if (isset($_SESSION['success'])) {
@@ -85,7 +63,7 @@ if (isset($_POST['search'])) {
                                             Super!
                                         </div>
                                         <div class="invalid-feedback">
-                                            Molimo unesite ime kategorije.
+                                            Molimo unesite ime branda.
                                         </div>
                                         <div class="form-group">
                                             <label for="exampleInputPassword1">Opis branda</label>
@@ -100,46 +78,9 @@ if (isset($_POST['search'])) {
                         </div>
                         <?php
                         if (isset($_GET['id'])) {
-                            $sql = "SELECT * FROM brands WHERE id = ? LIMIT 1"; // SQL with parameters
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bind_param("i", $_GET['id']);
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $nums = mysqli_num_rows($result);
-                            //$user = $result->fetch_assoc(); // fetch data
-                            $brand = mysqli_fetch_assoc($result);
+                            $brand = editBrand();
 
-
-                        ?>
-                            <div class="card">
-                                <div class="card-body">
-
-                                    <form action="" method="post" enctype="multipart/form-data" name="edit" class="needs-validation" novalidate>
-                                        <div class="form-group">
-                                            <label for="category">Promjena imena branda</label>
-                                            <input type="text" name="name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Ime kategorije" required value="<?php echo $brand['name'] ?>">
-                                            <div class="valid-feedback">
-                                                Super!
-                                            </div>
-                                            <div class="invalid-feedback">
-                                                Molimo unesite ime branda.
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="exampleInputPassword1">Opis branda</label>
-                                                <textarea name="description" class="form-control" id="post_content" rows="7" required oninvalid="this.setCustomValidity('Unesite sadržaj objave!')" oninput="this.setCustomValidity('')"><?php echo $brand['description'] ?></textarea>
-                                                <div class="valid-feedback">
-                                                    Super!
-                                                </div>
-                                                <div class="invalid-feedback">
-                                                    Molimo unesite opis.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="submit" name="edit" class="btn btn-primary">Spremi</button>
-                                    </form>
-                                </div>
-                            </div>
-                        <?php
+                            include("includes/admin-brands-editForm.php");
                         } ?>
                     </div>
                     <div class="col-lg-8 col-md-12">
@@ -149,19 +90,7 @@ if (isset($_POST['search'])) {
                             </div>
                             <div class="card-body">
                                 <form action="brands.php" method="post" enctype="multipart/form-data">
-                                    <div class="container">
-                                        <div class="row align-items-center">
-
-                                            <div class="col-sm">
-                                                <label for="">Pretraga</label>
-                                                <input type="text" name="key" class="form-control">
-                                            </div>
-                                            <div class="col-sm">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                    <?php include("includes/admin-search-simple.php"); ?>
                                 </form>
 
                                 <div class="table-responsive">
@@ -183,37 +112,13 @@ if (isset($_POST['search'])) {
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
-                                            if (isset($searchKey)) {
-                                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                                $sql = "SELECT * FROM brands WHERE name LIKE ?"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                                $stmt->bind_param('s', $search);
-                                            } else {
-                                                $sql = "SELECT * FROM brands"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                            }
-                                            $stmt->execute();
-                                            $result = $stmt->get_result(); // get the mysqli result
-                                            $allRecrods = mysqli_num_rows($result);
-                                            // Calculate total pages
-                                            $totoalPages = ceil($allRecrods / $limit);
-                                            // Current pagination page number
-                                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                            $prev = $page - 1;
-                                            $next = $page + 1;
-                                            // Offset
-                                            $paginationStart = ($page - 1) * $limit;
-                                            if (isset($searchKey)) {
-                                                $sql = $conn->prepare("SELECT * FROM brands WHERE name LIKE ? LIMIT $paginationStart, $limit");
-                                                $sql->bind_param("s", $search);
-                                                $sql->execute();
-                                                $resultsBrands = $sql->get_result();
-                                            } else {
-                                                $sql = $conn->prepare("SELECT * FROM brands LIMIT $paginationStart, $limit");
-                                                $sql->execute();
-                                                $resultsBrands = $sql->get_result();
-                                            }
+                                            $getBrandData = getBrandData();
+                                            $resultsBrands = $getBrandData[0];
+                                            $limit = $getBrandData[1];
+                                            $page = $getBrandData[2];
+                                            $prev = $getBrandData[3];
+                                            $next = $getBrandData[4];
+                                            $totoalPages = $getBrandData[5];
 
                                             while ($row = mysqli_fetch_assoc($resultsBrands)) {
                                             ?>
@@ -247,108 +152,7 @@ if (isset($_POST['search'])) {
                                     </table>
                                     <!-- Pagination -->
 
-                                    <?php if (isset($search)) { ?>
-                                        <!--Pagination with search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'brands.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination with search-->
-                                    <?php
-                                    } else { ?>
-                                        <!--Pagination without search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'brands.php?page=' . $i ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination without search-->
-                                    <?php } ?>
+                                    <?php pagination($main); ?>
                                     <!-- End Pagination -->
                                 </div>
                             </div>

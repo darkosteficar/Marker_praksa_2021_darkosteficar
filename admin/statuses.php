@@ -3,11 +3,8 @@ include_once("includes/db.php");
 include_once("includes/functions.php");
 include_once("includes/admin-header.php");
 ob_start();
-if (isset($_POST['search'])) {
-    $searchKey = $_POST['key'];
-} else if (isset($_GET['search'])) {
-    $searchKey = $_GET['search'];
-}
+$searchKey = searchKeyNoField();
+$main = 'statuses';
 ?>
 
 <body class="">
@@ -235,108 +232,7 @@ if (isset($_POST['search'])) {
                                         </tbody>
                                     </table>
                                     <!-- Pagination -->
-                                    <?php if (isset($search)) { ?>
-                                        <!--Pagination with search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'statuses.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination with search-->
-                                    <?php
-                                    } else { ?>
-                                        <!--Pagination without search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'statuses.php?page=' . $i ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination without search-->
-                                    <?php } ?>
+                                    <?php pagination($main); ?>
                                     <!-- End Pagination -->
                                 </div>
                             </div>

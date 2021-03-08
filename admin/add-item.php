@@ -9,6 +9,26 @@ if (isset($_POST['create'])) {
     createItem();
 }
 
+
+$stmt = $conn->prepare("SELECT * FROM item_category WHERE item_id = ?");
+$stmt->bind_param('i', $_GET['edit']);
+$stmt->execute();
+$resultsCategories = $stmt->get_result();
+$allCategories = array();
+while ($row = mysqli_fetch_assoc($resultsCategories)) {
+    $allCategories[] = $row['category_id'];
+}
+
+$stmt = $conn->prepare("SELECT * FROM item_attribute WHERE item_id = ?");
+$stmt->bind_param('i', $_GET['edit']);
+$stmt->execute();
+$resultsCategories = $stmt->get_result();
+$allAttributes = array();
+while ($row = mysqli_fetch_assoc($resultsCategories)) {
+    $allAttributes[] = $row['attribute_id'];
+}
+
+
 ?>
 
 <body class="">
@@ -36,7 +56,12 @@ if (isset($_POST['create'])) {
                                 <h4 class="card-title"> Novi proizvod</h4>
                             </div>
                             <div class="card-body">
-
+                                <?php
+                                if (isset($_SESSION['success'])) {
+                                    echo  '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
+                                    unset($_SESSION['success']);
+                                }
+                                ?>
                                 <form class="needs-validation" novalidate method="POST" enctype="multipart/form-data">
                                     <div class="form-row ">
                                         <label for="uploadImageFile"> &nbsp; Slike: &nbsp; </label>
@@ -167,44 +192,54 @@ if (isset($_POST['create'])) {
 
                                         <div class="form-group">
 
-                                            <label for="">Kategorije:</label>
+                                            <label for="" style="font-size: 20px;font-weight:600">Kategorije:</label>
                                             <?php
                                             $level_colors = array();
                                             $level_colors[] = 'blue';
                                             $level_colors[] = 'green';
                                             $level_colors[] = 'red';
                                             $level_colors[] = 'orange';
-                                            function display_children($parent, $level, $level_colors)
-                                            {
-                                                // retrieve all children of $parent 
-                                                global $conn;
-                                                $result = $conn->query('SELECT id,name FROM categories ' . 'WHERE parent_id="' . $parent . '";');
-                                                // display each child 
-                                                echo "<br>";
-                                                while ($row = mysqli_fetch_array($result)) {
-                                                    // indent and display the title of this child 
-                                            ?>
-                                                    <div class="form-check" style="<?php echo 'margin-left:' . 20 * $level . 'px' ?>">
-                                                        <label class="form-check-label" style="font-size: 15px;">
-                                                            <input class="form-check-input" name="categories[]" type="checkbox" value="<?php echo $row['id'] ?>">
-                                                            <?php echo $row['name']; ?>
-                                                            <span class="form-check-sign">
-                                                                <span class="check"></span>
-                                                            </span>
-                                                        </label>
-                                                    </div>
-                                            <?php
 
-                                                    display_children($row['id'], $level + 1, $level_colors);
-                                                }
-                                            }
                                             display_children(1, 0, $level_colors);
+                                            echo "<br>";
                                             display_children(6, 0, $level_colors);
 
                                             ?>
 
                                         </div>
 
+                                        <div class="form-group mt-5">
+                                            <label for="" style="font-size: 20px;font-weight:600">Atributi:</label>
+                                            <?php
+                                            $stmt = $conn->prepare("SELECT DISTINCT name FROM attributes ");
+                                            $stmt->execute();
+                                            $results = $stmt->get_result();
+                                            $attributeNames = array();
+                                            while ($row = mysqli_fetch_assoc($results)) {
+                                                $attributeNames[] = $row['name'];
+                                            }
+
+                                            foreach ($attributeNames as $name) {
+                                                echo '<hr style="background-color:white">';
+                                                $stmt = $conn->prepare("SELECT * FROM attributes WHERE name = ?");
+                                                $stmt->bind_param('s', $name);
+                                                $stmt->execute();
+                                                $resultsAttributes = $stmt->get_result();
+                                                while ($attribute = mysqli_fetch_assoc($resultsAttributes)) { ?>
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" style="font-size: 15px;">
+                                                            <input class="form-check-input" name="attributes[]" type="checkbox" value="<?php echo $attribute['id'] ?>" <?php if (in_array($attribute['id'], $allAttributes)) echo "checked" ?>>
+                                                            <?php echo $attribute['name'] . ' : ' . $attribute['value'] ?>
+                                                            <span class="form-check-sign">
+                                                                <span class="check"></span>
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                            <?php
+                                                }
+                                            }
+                                            ?>
+                                        </div>
 
                                     </div>
                             </div>
