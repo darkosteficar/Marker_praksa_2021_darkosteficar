@@ -4,6 +4,7 @@ include_once("includes/functions.php");
 include_once("includes/admin-header.php");
 ob_start();
 $searchKey = searchKeyNoField();
+$main = 'categories';
 ?>
 
 <body class="">
@@ -34,35 +35,9 @@ $searchKey = searchKeyNoField();
                     }
                 }
                 if (isset($_POST['edit'])) {
-                    if (isset($_GET['id'])) {
-                        $name = htmlentities($_POST['name']);
-                        $description = htmlentities($_POST['description']);
-                        $id = $_GET['id'];
-                        $parent = htmlentities($_POST['parent']);
-                        $active = htmlentities($_POST['active']);
-                        if ($parent == 'np') {
-                            $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ? WHERE id = ? ");
-                            $stmtImages->bind_param("ssii", $name, $description, $active, $id);
-                        } else {
-                            $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ?,parent_id = ? WHERE id = ? ");
-                            $stmtImages->bind_param("ssiii", $name, $description, $active,  $parent, $id);
-                        }
-                        $stmtImages->execute();
-                        $_SESSION['success'] = 'Kategorija ' . $name . ' je uspješno promjenjena!';
-                        header("location: categories.php");
-                        exit();
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
-                    }
                 }
                 if (isset($_GET['delete'])) {
-                    $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
-                    $stmt->bind_param('i', $_GET['delete']);
-                    if ($stmt->execute()) {
-                        $_SESSION['success'] = 'Kategorija je uspješno izbrisana!';
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
-                    }
+                    deleteCategory();
                 }
                 if (isset($_SESSION['success'])) {
                     echo '<div class="alert alert-success" role="alert">' .  $_SESSION['success'] . '</div>';
@@ -121,14 +96,7 @@ $searchKey = searchKeyNoField();
                         </div>
                         <?php
                         if (isset($_GET['id'])) {
-                            $sql = "SELECT * FROM categories WHERE id = ? LIMIT 1"; // SQL with parameters
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bind_param("i", $_GET['id']);
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $nums = mysqli_num_rows($result);
-                            //$user = $result->fetch_assoc(); // fetch data
-                            $category = mysqli_fetch_assoc($result);
+                            $category = editCategory();
                         ?>
                             <div class="card">
                                 <div class="card-body">
@@ -197,21 +165,11 @@ $searchKey = searchKeyNoField();
                                 <h4 class="card-title"> Kategorije</h4>
                             </div>
                             <div class="card-body">
-                                <form action="categories.php" method="post" enctype="multipart/form-data">
-                                    <div class="container">
-                                        <div class="row align-items-center">
 
-                                            <div class="col-sm">
-                                                <label for="">Pretraga</label>
-                                                <input type="text" name="key" class="form-control">
-                                            </div>
-                                            <div class="col-sm">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                <form action="categories.php" method="get" enctype="multipart/form-data">
+                                    <?php include("includes/admin-search-simple.php"); ?>
                                 </form>
+
                                 <div class="table-responsive">
                                     <table class="table tablesorter " id="">
                                         <thead class=" text-primary">
@@ -231,39 +189,15 @@ $searchKey = searchKeyNoField();
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
-                                            if (isset($searchKey)) {
-                                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                                $sql = "SELECT * FROM categories WHERE name LIKE ?"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                                $stmt->bind_param('s', $search);
-                                            } else {
-                                                $sql = "SELECT * FROM categories"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                            }
-                                            $stmt->execute();
-                                            $result = $stmt->get_result(); // get the mysqli result
-                                            $allRecrods = mysqli_num_rows($result);
-                                            // Calculate total pages
-                                            $totoalPages = ceil($allRecrods / $limit);
-                                            // Current pagination page number
-                                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                            $prev = $page - 1;
-                                            $next = $page + 1;
-                                            // Offset
-                                            $paginationStart = ($page - 1) * $limit;
-                                            if (isset($searchKey)) {
-                                                $sql = $conn->prepare("SELECT * FROM categories WHERE name LIKE ? LIMIT $paginationStart, $limit");
-                                                $sql->bind_param("s", $search);
-                                                $sql->execute();
-                                                $resultsStatuses = $sql->get_result();
-                                            } else {
-                                                $sql = $conn->prepare("SELECT * FROM categories LIMIT $paginationStart, $limit");
-                                                $sql->execute();
-                                                $resultsStatuses = $sql->get_result();
-                                            }
+                                            $getCategories = getAll($main);
+                                            $resultsCategories = $getCategories[0];
+                                            $limit = $getCategories[1];
+                                            $page = $getCategories[2];
+                                            $prev = $getCategories[3];
+                                            $next = $getCategories[4];
+                                            $totoalPages = $getCategories[5];
 
-                                            while ($row = mysqli_fetch_assoc($resultsStatuses)) {
+                                            while ($row = mysqli_fetch_assoc($resultsCategories)) {
                                             ?>
                                                 <tr>
                                                     <td>
@@ -302,108 +236,7 @@ $searchKey = searchKeyNoField();
 
                                     <!-- Pagination -->
 
-                                    <?php if (isset($search)) { ?>
-                                        <!--Pagination with search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'categories.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination with search-->
-                                    <?php
-                                    } else { ?>
-                                        <!--Pagination without search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'categories.php?page=' . $i ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination without search-->
-                                    <?php } ?>
+                                    <?php pagination($main); ?>
                                     <!-- End Pagination -->
                                 </div>
                             </div>

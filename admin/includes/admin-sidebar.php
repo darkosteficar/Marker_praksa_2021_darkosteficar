@@ -59,7 +59,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'brands.php')) {
                 echo 'class="active"';
             } ?>">
-            <a href="brands.php">
+            <a href="brands.php?search=">
                 <i class="tim-icons icon-components"></i>
                 <p>Brandovi</p>
             </a>
@@ -75,7 +75,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'statuses.php')) {
                 echo 'class="active"';
             } ?>">
-            <a href="statuses.php">
+            <a href="statuses.php?search=">
                 <i class="tim-icons icon-components"></i>
                 <p>Statusi</p>
             </a>

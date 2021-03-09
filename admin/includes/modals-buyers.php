@@ -14,7 +14,7 @@
              <div class="modal-footer">
                  <?php $_SESSION['prevUrl'] = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>
                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Odustani</button>
-                 <a href="admin-users.php?delete=<?php echo $row['id'] ?>"><button type="button" class="btn btn-primary">Izbriši</button></a>
+                 <a href="buyers.php?delete=<?php echo $row['id'] ?>"><button type="button" class="btn btn-primary">Izbriši</button></a>
 
 
              </div>

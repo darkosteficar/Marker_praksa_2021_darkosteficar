@@ -3,18 +3,18 @@ include_once("includes/db.php");
 include_once("includes/functions.php");
 include_once("includes/admin-header.php");
 ob_start();
+$searchKey = '';
 
-$searchKey = searchKeyNoField();
+if (!empty($_GET['search'])) {
+    $searchKey = $_GET['search'];
+}
+
 $main = 'brands';
-
 ?>
 
 <body class="">
     <div class="wrapper">
         <div class="sidebar">
-            <!--
-            Tip 1: You can change the color of the sidebar using: data-color="blue | green | orange | red"
-             -->
             <?php
             include("includes/admin-sidebar.php");
             ?>
@@ -31,14 +31,14 @@ $main = 'brands';
                     if (createBrand()) {
                         $_SESSION['success'] = 'Brand je uspješno dodan!';
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">Dogodila se greška.</div>';
+                        echo '<div class="alert alert-danger" role="alert">Brend nije dodan.</div>';
                     }
                 }
                 if (isset($_POST['edit'])) {
                     if (isset($_GET['id'])) {
                         updateBrand();
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
+                        echo '<div class="alert alert-danger" role="alert">Nije odabran brend za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
@@ -55,10 +55,10 @@ $main = 'brands';
                         <div class="card">
                             <div class="card-body">
 
-                                <form action="" method="post" enctype="multipart/form-data" name="add_category" class="needs-validation" novalidate>
+                                <form action="" method="post" enctype="multipart/form-data" name="add_category">
                                     <div class="form-group">
                                         <label for="category">Novi brand</label>
-                                        <input type="text" name="name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Ime kategorije" required>
+                                        <input type="text" name="name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Ime kategorije">
                                         <div class="valid-feedback">
                                             Super!
                                         </div>
@@ -67,11 +67,11 @@ $main = 'brands';
                                         </div>
                                         <div class="form-group">
                                             <label for="exampleInputPassword1">Opis branda</label>
-                                            <textarea name="description" class="form-control" id="post_content" rows="7" required oninvalid="this.setCustomValidity('Unesite sadržaj objave!')" oninput="this.setCustomValidity('')"></textarea>
+                                            <textarea name="description" class="form-control" id="post_content" rows="7" "></textarea>
 
                                         </div>
                                     </div>
-                                    <button type="submit" name="create" class="btn btn-primary">Dodaj</button>
+                                    <button type=" submit" name="create" class="btn btn-primary">Dodaj</button>
                                 </form>
 
                             </div>
@@ -79,7 +79,6 @@ $main = 'brands';
                         <?php
                         if (isset($_GET['id'])) {
                             $brand = editBrand();
-
                             include("includes/admin-brands-editForm.php");
                         } ?>
                     </div>
@@ -89,10 +88,9 @@ $main = 'brands';
                                 <h4 class="card-title"> Brendovi</h4>
                             </div>
                             <div class="card-body">
-                                <form action="brands.php" method="post" enctype="multipart/form-data">
+                                <form action="brands.php" method="get" enctype="multipart/form-data">
                                     <?php include("includes/admin-search-simple.php"); ?>
                                 </form>
-
                                 <div class="table-responsive">
                                     <table class="table tablesorter " id="">
                                         <thead class=" text-primary">
@@ -112,14 +110,13 @@ $main = 'brands';
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $getBrandData = getBrandData();
+                                            $getBrandData = getAll($main);
                                             $resultsBrands = $getBrandData[0];
                                             $limit = $getBrandData[1];
                                             $page = $getBrandData[2];
                                             $prev = $getBrandData[3];
                                             $next = $getBrandData[4];
                                             $totoalPages = $getBrandData[5];
-
                                             while ($row = mysqli_fetch_assoc($resultsBrands)) {
                                             ?>
                                                 <tr>
@@ -151,7 +148,6 @@ $main = 'brands';
                                         </tbody>
                                     </table>
                                     <!-- Pagination -->
-
                                     <?php pagination($main); ?>
                                     <!-- End Pagination -->
                                 </div>

@@ -13,21 +13,12 @@ if (isset($_POST['search'])) {
 }
 
 
-
+$table = 'buyers';
+$main = 'buyers';
 ?>
 <?php
 if (isset($_POST['edit'])) {
-    if (empty(!$_POST['id']) && empty(!$_POST['name']) && empty(!$_POST['surname']) && empty(!$_POST['email']) && empty(!$_POST['address'])) {
-        $id = $_POST['id'];
-        $stmtImages = $conn->prepare("UPDATE buyers SET name = ?,surname = ?,email=? , address = ? WHERE id = ? ");
-        $stmtImages->bind_param("ssssi", $_POST['name'], $_POST['surname'], $_POST['email'], $_POST['address'], $_POST['id']);
-        $stmtImages->execute();
-        $prevUrl = $_SESSION['prevUrl'];
-        header("location: $prevUrl ");
-        unset($_SESSION['prevUrl']);
-    } else {
-        echo '<div class="alert alert-danger" role="alert">Sva polja za promjenu nisu popunjena.</div>';
-    }
+    updateBuyer();
 }
 $sessionRole = 'admin';
 if ($sessionRole != 'admin') {
@@ -58,15 +49,7 @@ if ($sessionRole != 'admin') {
             <div class="content">
                 <?php
                 if (isset($_GET['delete'])) {
-                    $user_id = $_GET['delete'];
-                    $sql = "DELETE FROM buyers WHERE id = ? ";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $prevUrl = $_SESSION['prevUrl'];
-                    header("location: $prevUrl ");
-                    unset($_SESSION['prevUrl']);
-                    echo '<div class="alert alert-success" role="alert">Kupac uspješno obrisan.</div>';
+                    deleteBuyer();
                 }
                 ?>
                 <div class="row">
@@ -83,10 +66,18 @@ if ($sessionRole != 'admin') {
                             </tr>
                         </thead>
                         <tbody>
+                            <?php
+                            if (isset($_SESSION['success'])) {
+                                echo '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
+                                unset($_SESSION['success']);
+                            }
+                            ?>
                             <div class="card-body">
-                                <form action="buyers.php" method="post" enctype="multipart/form-data">
-                                    <div class="container">
-                                        <div class="row align-items-center justify-content-start">
+                                <div class="container">
+                                    <div class="row align-items-center justify-content-start">
+                                        <form action="buyers.php" method="post" enctype="multipart/form-data">
+
+
 
                                             <div class="col-sm-3">
                                                 <input type="text" name="key" class="form-control" placeholder="Pretraga">
@@ -94,7 +85,7 @@ if ($sessionRole != 'admin') {
                                             <div class="col-sm-2">
                                                 <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
                                             </div>
-                                            <div class="col-sm-3">
+                                            <div class="col-sm-3 mr-5">
                                                 <div class="form-group ">
                                                     <label for="inputState">Polja</label>
                                                     <select id="inputState" class="form-control" style="background-color: black;" name="field">
@@ -107,43 +98,20 @@ if ($sessionRole != 'admin') {
                                             </div>
 
 
+                                        </form>
+                                        <div class="col-sm-2 ml-5">
+                                            <a href="add-buyer.php"><button class="btn btn-success btn-md" type="submit" name="search">Dodaj kupca</button></a>
                                         </div>
                                     </div>
-                                </form>
+                                </div>
                                 <?php
-                                $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
-                                if (isset($searchKey)) {
-                                    $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                    $field =   mysqli_real_escape_string($conn, $searchField);
-                                    $sql = "SELECT * FROM buyers WHERE $field LIKE ?"; // SQL with parameters
-                                    $stmt = $conn->prepare($sql);
-                                    $stmt->bind_param('s', $search);
-                                } else {
-                                    $sql = "SELECT * FROM buyers"; // SQL with parameters
-                                    $stmt = $conn->prepare($sql);
-                                }
-                                $stmt->execute();
-                                $result = $stmt->get_result(); // get the mysqli result
-                                $allRecrods = mysqli_num_rows($result);
-                                // Calculate total pages
-                                $totoalPages = ceil($allRecrods / $limit);
-                                // Current pagination page number
-                                $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                $prev = $page - 1;
-                                $next = $page + 1;
-                                // Offset
-                                $paginationStart = ($page - 1) * $limit;
-
-                                if (isset($searchKey)) {
-                                    $stmt = $conn->prepare("SELECT * FROM buyers WHERE $field LIKE ? LIMIT $paginationStart,$limit");
-                                    $stmt->bind_param('s', $search);
-                                    $stmt->execute();
-                                    $resultsBuyers = $stmt->get_result();
-                                } else {
-                                    $sql = $conn->prepare("SELECT * FROM buyers LIMIT $paginationStart, $limit");
-                                    $sql->execute();
-                                    $resultsBuyers = $sql->get_result();
-                                }
+                                $getBuyerData = getAll($table);
+                                $resultsBuyers = $getBuyerData[0];
+                                $limit = $getBuyerData[1];
+                                $page = $getBuyerData[2];
+                                $prev = $getBuyerData[3];
+                                $next = $getBuyerData[4];
+                                $totoalPages = $getBuyerData[5];
                                 while ($row = mysqli_fetch_assoc($resultsBuyers)) {
                                 ?>
                                     <tr>
@@ -174,58 +142,9 @@ if ($sessionRole != 'admin') {
                         </tbody>
                     </table>
                 </div>
-                <!--Pagination-->
-                <nav class="d-flex justify-content-center wow fadeIn">
-                    <ul class="pagination pg-blue">
-
-                        <!--Arrow left-->
-                        <li class="page-item <?php if ($page <= 1) {
-                                                    echo 'disabled';
-                                                } ?> ">
-                            <a class="page-link" href="<?php if ($page <= 1) {
-                                                            echo '#';
-                                                        } else {
-                                                            echo '?page=' . $prev;
-                                                        } ?> " aria-label="Previous">
-                                <span aria-hidden="true"> &lArr;</span>
-                                <span class="sr-only">Previous</span>
-                            </a>
-                        </li>
-
-
-                        <?php
-                        for ($i = 1; $i <= $totoalPages; $i++) {
-                        ?>
-                            <li class="page-item <?php if ($page == $i) {
-                                                        echo 'active';
-                                                    }  ?>">
-                                <a class="page-link" href="<?php echo 'admin-users.php?page=' . $i ?>"><?php echo $i ?>
-                                    <?php if ($page == $i) {
-                                    ?>
-                                        <span class="sr-only">(current)</span>
-                                    <?php
-                                    } ?>
-
-                                </a>
-                            </li>
-                        <?php
-                        }
-                        ?>
-                        <li class="page-item <?php if ($page >= $totoalPages) {
-                                                    echo 'disabled';
-                                                } ?> ">
-                            <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                            echo '#';
-                                                        } else {
-                                                            echo '?page=' . $next;
-                                                        } ?> " aria-label="Next">
-                                <span aria-hidden="true">&rArr;</span>
-                                <span class="sr-only">Next</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-                <!--Pagination-->
+                <!-- Pagination -->
+                <?php pagination($main); ?>
+                <!-- End Pagination -->
             </div>
 
         </div>

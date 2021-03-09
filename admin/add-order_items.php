@@ -14,39 +14,6 @@ if (!isset($_GET['order'])) {
 
 
 <?php
-if (isset($_POST['edit'])) {
-    if (empty(!$_POST['price']) && empty(!$_POST['quantity'])) {
-        $id = $_POST['id'];
-        $order_id = $_POST['order_id'];
-        $stmtImages = $conn->prepare("UPDATE order_items SET price = ?,quantity = ? WHERE item_id = ? AND order_id = ?");
-        $stmtImages->bind_param("diii", $_POST['price'], $_POST['quantity'], $id, $order_id);
-        if ($stmtImages->execute()) {
-            $_SESSION['success'] = 'Proizvod je uspješno promjenjen!';
-            header("location: order_items.php?order=" . $order_id);
-            exit();
-        } else {
-            echo '<div class="alert alert-danger" role="alert">Dogodila se pogreška.</div>';
-        }
-    } else {
-        echo '<div class="alert alert-danger" role="alert">Sva polja za promjenu nisu popunjena.</div>';
-    }
-}
-$sessionRole = 'admin';
-if ($sessionRole != 'admin') {
-    header('location: brands.php');
-}
-
-if (isset($_GET['delete'])) {
-    $user_id = $_GET['delete'];
-    $sql = "DELETE FROM buyers WHERE id = ? ";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $prevUrl = $_SESSION['prevUrl'];
-    header("location: $prevUrl ");
-    unset($_SESSION['prevUrl']);
-    echo '<div class="alert alert-success" role="alert">Kupac uspješno obrisan.</div>';
-}
 ?>
 
 <body class="">
@@ -71,7 +38,7 @@ if (isset($_GET['delete'])) {
             <!-- End Navbar -->
             <div class="content">
 
-                <h3>Popis proizvoda iz ove narudžbe</h3>
+                <h3>Popis proizvoda</h3>
                 <div class="row">
                     <table class="table  table-striped table-bordered table-hover">
 
@@ -79,10 +46,7 @@ if (isset($_GET['delete'])) {
                             <tr>
                                 <th>Ime Proizvoda</th>
                                 <th>Cijena</th>
-                                <th>Količina</th>
-                                <th>Slika</th>
-                                <th class="text-center">Uredi</th>
-                                <th class="text-center">Brisanje</th>
+                                <th class="text-center">Odabir</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,9 +79,7 @@ if (isset($_GET['delete'])) {
                                                 </div>
                                             </div>
                                         </form>
-                                        <div class="col-sm-2 ml-5">
-                                            <a href="add-order_items.php?order=<?php echo $_GET['order'] ?>"><button class="btn btn-success btn-md" type="submit" name="search">Dodaj proizvode</button></a>
-                                        </div>
+
 
                                     </div>
                                 </div>
@@ -132,7 +94,9 @@ if (isset($_GET['delete'])) {
                                     $stmt = $conn->prepare($sql);
                                     $stmt->bind_param('s', $search);
                                 } else {
-                                    $sql = "SELECT order_items.quantity,order_items.price,items.name FROM order_items LEFT JOIN items ON items.id = order_items.item_id WHERE order_items.order_id = ?"; // SQL with parameters
+                                    $sql = "SELECT DISTINCT items.*,order_items.* FROM items LEFT JOIN order_items
+                                    ON order_items.item_id = items.id AND order_items.order_id = ?
+                                    WHERE order_items.order_id IS NULL"; // SQL with parameters
                                     $stmt = $conn->prepare($sql);
                                     $stmt->bind_param('i', $_GET['order']);
                                 }
@@ -155,7 +119,9 @@ if (isset($_GET['delete'])) {
                                     $resultsOrderItems = $sql->get_result();
                                     echo $search;
                                 } else {
-                                    $sql = "SELECT order_items.quantity,order_items.price,items.name,order_items.item_id FROM order_items LEFT JOIN items ON items.id = order_items.item_id WHERE order_items.order_id = ? LIMIT $paginationStart, $limit"; // SQL with parameters
+                                    $sql = "SELECT DISTINCT items.*,order_items.* FROM items LEFT JOIN order_items
+                                    ON order_items.item_id = items.id AND order_items.order_id = ?
+                                    WHERE order_items.order_id IS NULL LIMIT $paginationStart, $limit"; // SQL with parameters
                                     $stmt = $conn->prepare($sql);
                                     $stmt->bind_param('i', $_GET['order']);
                                     $stmt->execute();
@@ -165,21 +131,22 @@ if (isset($_GET['delete'])) {
                                 ?>
                                     <tr>
                                         <td><?php echo $row['name'] ?></td>
-                                        <td><?php echo $row['price'] ?></td>
-                                        <td><?php echo $row['quantity'] ?></td>
-                                        <td><?php echo $row['name'] ?></td>
+                                        <td><?php echo $row['base_price'] ?></td>
+
                                         <?php
                                         $userAdmin = '';
                                         ?>
+
                                         <td class="td-actions text-center">
-                                            <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon <?php echo $userAdmin ?>" data-toggle="modal" data-target="#exampleModal3<?php echo $row['item_id'] ?>">
-                                                <i class="tim-icons icon-settings"></i>
-                                            </button>
-                                        </td>
-                                        <td class="td-actions text-center">
-                                            <button type="button" rel="tooltip" class="btn btn-danger btn-sm btn-icon <?php echo $userAdmin ?>" data-toggle="modal" data-target="#exampleModal1<?php echo $row['item_id'] ?>">
-                                                <i class="tim-icons icon-simple-remove"></i>
-                                            </button>
+                                            <div class="form-check">
+                                                <label class="form-check-label" style="font-size: 15px;">
+                                                    <input class="form-check-input" name="images[]" type="checkbox" value="<?php echo $row['name'] ?>">
+
+                                                    <span class="form-check-sign">
+                                                        <span class="check"></span>
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </td>
                                         <?php include("includes/modals-order_items.php") ?>
                                     </tr>

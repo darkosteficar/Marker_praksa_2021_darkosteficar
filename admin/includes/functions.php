@@ -2,23 +2,17 @@
 
 include("includes/db.php");
 
-
-
-// Brands
-
-
-
-function getBrandData()
+function getAll($table)
 {
-    global $conn;
+    global $conn, $searchKey;
     $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
     if (isset($searchKey)) {
         $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-        $sql = "SELECT * FROM brands WHERE name LIKE ?"; // SQL with parameters
+        $sql = "SELECT * FROM $table WHERE name LIKE ?"; // SQL with parameters
         $stmt = $conn->prepare($sql);
         $stmt->bind_param('s', $search);
     } else {
-        $sql = "SELECT * FROM brands"; // SQL with parameters
+        $sql = "SELECT * FROM $table"; // SQL with parameters
         $stmt = $conn->prepare($sql);
     }
     $stmt->execute();
@@ -33,45 +27,76 @@ function getBrandData()
     // Offset
     $paginationStart = ($page - 1) * $limit;
     if (isset($searchKey)) {
-        $sql = $conn->prepare("SELECT * FROM brands WHERE name LIKE ? LIMIT $paginationStart, $limit");
+        $sql = $conn->prepare("SELECT * FROM $table WHERE name LIKE ? LIMIT $paginationStart, $limit");
         $sql->bind_param("s", $search);
         $sql->execute();
         $resultsBrands = $sql->get_result();
     } else {
-        $sql = $conn->prepare("SELECT * FROM brands LIMIT $paginationStart, $limit");
+        $sql = $conn->prepare("SELECT * FROM $table LIMIT $paginationStart, $limit");
         $sql->execute();
         $resultsBrands = $sql->get_result();
     }
+    $rows = mysqli_num_rows($resultsBrands);
     return array($resultsBrands, $limit, $page, $prev, $next, $totoalPages);
 }
 
+function test_input($data)
+{
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+// Brands
 
 function createBrand()
 {
-    global $conn;
-    $name = htmlentities($_POST['name']);
-    $description = htmlentities($_POST['description']);
-    $stmt = $conn->prepare("INSERT INTO brands (name,description) VALUES (?,?)");
-    $stmt->bind_param("ss", $name, $description);
-    if ($stmt->execute()) {
-        return true;
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
     }
-    return false;
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        $name = htmlentities($_POST['name']);
+        $description = htmlentities($_POST['description']);
+        $stmt = $conn->prepare("INSERT INTO brands (name,description) VALUES (?,?)");
+        $stmt->bind_param("ss", $name, $description);
+        if ($stmt->execute()) {
+            return true;
+        }
+    }
 }
 
 
 function updateBrand()
 {
-    global $conn;
-    $name = $_POST['name'];
-    $description = $_POST['description'];
-    $id = $_GET['id'];
-    $stmt = $conn->prepare("UPDATE brands SET name = ?,description = ? WHERE id = ? ");
-    $stmt->bind_param("ssi", $name, $description, $id);
-    $stmt->execute();
-    $_SESSION['success'] = 'Brand ' . $name . ' je uspješno promjenjen!';
-    header("location:" . $_SERVER['HTTP_REFERER']);
-    exit();
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        $name = htmlentities($_POST['name']);
+        $description = htmlentities($_POST['description']);
+        $id = $_GET['id'];
+        $stmt = $conn->prepare("UPDATE brands SET name = ?,description = ? WHERE id = ? ");
+        $stmt->bind_param("ssi", $name, $description, $id);
+        $stmt->execute();
+        $_SESSION['success'] = 'Brand ' . $name . ' je uspješno promjenjen!';
+        header("location:" . $_SERVER['HTTP_REFERER']);
+        exit();
+    }
 }
 
 function deleteBrand()
@@ -110,16 +135,87 @@ function editBrand()
 
 function createStatus()
 {
-    global $conn;
-    $name = htmlentities($_POST['name']);
-    $description = htmlentities($_POST['description']);
-    $stmt = $conn->prepare("INSERT INTO order_statuses (name,description) VALUES (?,?)");
-    $stmt->bind_param("ss", $name, $description);
-    if ($stmt->execute()) {
-        return true;
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        $name = htmlentities($_POST['name']);
+        $description = htmlentities($_POST['description']);
+        $id = $_GET['id'];
+        $stmt = $conn->prepare("UPDATE statuses SET name = ?,description = ? WHERE id = ? ");
+        $stmt->bind_param("ssi", $name, $description, $id);
+        $stmt->execute();
+        $_SESSION['success'] = 'Status ' . $name . ' je uspješno promjenjen!';
+        header("location:" . $_SERVER['HTTP_REFERER']);
+        exit();
+    }
+}
+
+
+function updateStatus()
+{
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        $name = $_POST['name'];
+        $description = $_POST['description'];
+        $id = $_GET['id'];
+        $stmtImages = $conn->prepare("UPDATE order_statuses SET name = ?,description = ? WHERE id = ? ");
+        $stmtImages->bind_param("ssi", $name, $description, $id);
+        if ($stmtImages->execute()) {
+            $_SESSION['success'] = 'Status ' . $name . ' je uspješno promjenjen!';
+            header("location: statuses.php");
+            exit();
+        } else {
+            return false;
+        }
     }
     return false;
 }
+
+function editStatus()
+{
+    global $conn;
+    $sql = "SELECT * FROM order_statuses WHERE id = ? LIMIT 1"; // SQL with parameters
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_GET['id']);
+    $stmt->execute();
+    $result = $stmt->get_result(); // get the mysqli result
+    $nums = mysqli_num_rows($result);
+    //$user = $result->fetch_assoc(); // fetch data
+    $status = mysqli_fetch_assoc($result);
+    return $status;
+}
+
+function deleteStatus()
+{
+    global $conn;
+    $stmt = $conn->prepare("DELETE FROM order_statuses WHERE id = ?");
+    $stmt->bind_param('i', $_GET['delete']);
+    if ($stmt->execute()) {
+        $_SESSION['success'] = 'Status je uspješno izbrisan!';
+        header("location: statuses.php");
+        exit();
+    } else {
+        echo '<div class="alert alert-danger" role="alert"> Status nije izbrisan. </div>';
+    }
+}
+
 
 // End Statuses
 
@@ -150,22 +246,97 @@ function createAttribute()
 
 function createCategory()
 {
-    global $conn;
-    $name = htmlentities($_POST['name']);
-    $description = htmlentities($_POST['description']);
-    $active = htmlentities($_POST['active']);
-    $parent = htmlentities($_POST['parent']);
-    if ($_POST['parent'] != 0) {
-        $stmt = $conn->prepare("INSERT INTO categories (name,description,active,parent_id) VALUES (?,?,?,?)");
-        $stmt->bind_param("ssii", $name, $description, $active, $parent);
-    } else {
-        $stmt = $conn->prepare("INSERT INTO categories (name,description,active) VALUES (?,?,?)");
-        $stmt->bind_param("ssi", $name, $description, $active);
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
     }
-    if ($stmt->execute()) {
-        return true;
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        $name = htmlentities($_POST['name']);
+        $description = htmlentities($_POST['description']);
+        $active = htmlentities($_POST['active']);
+        $parent = htmlentities($_POST['parent']);
+        if ($_POST['parent'] != 0) {
+            $stmt = $conn->prepare("INSERT INTO categories (name,description,active,parent_id) VALUES (?,?,?,?)");
+            $stmt->bind_param("ssii", $name, $description, $active, $parent);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO categories (name,description,active) VALUES (?,?,?)");
+            $stmt->bind_param("ssi", $name, $description, $active);
+        }
+        if ($stmt->execute()) {
+            return true;
+        }
     }
     return false;
+}
+
+
+function editCategory()
+{
+    global $conn;
+    $sql = "SELECT * FROM categories WHERE id = ? LIMIT 1"; // SQL with parameters
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_GET['id']);
+    $stmt->execute();
+    $result = $stmt->get_result(); // get the mysqli result
+    $nums = mysqli_num_rows($result);
+    //$user = $result->fetch_assoc(); // fetch data
+    $category = mysqli_fetch_assoc($result);
+    return $category;
+}
+
+function updateCategory()
+{
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['description'])) {
+        echo "<div class='alert alert-danger'>Polje opis je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker != 1) {
+        global $conn;
+        if (isset($_GET['id'])) {
+            $name = htmlentities($_POST['name']);
+            $description = htmlentities($_POST['description']);
+            $id = $_GET['id'];
+            $parent = htmlentities($_POST['parent']);
+            $active = htmlentities($_POST['active']);
+            if ($parent == 'np') {
+                $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ? WHERE id = ? ");
+                $stmtImages->bind_param("ssii", $name, $description, $active, $id);
+            } else {
+                $stmtImages = $conn->prepare("UPDATE categories SET name = ?,description = ?,active = ?,parent_id = ? WHERE id = ? ");
+                $stmtImages->bind_param("ssiii", $name, $description, $active,  $parent, $id);
+            }
+            $stmtImages->execute();
+            $_SESSION['success'] = 'Kategorija ' . $name . ' je uspješno promjenjena!';
+            header("location: categories.php");
+            exit();
+        } else {
+            echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
+        }
+    }
+    return false;
+}
+
+function deleteCategory()
+{
+    global $conn;
+    $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
+    $stmt->bind_param('i', $_GET['delete']);
+    if ($stmt->execute()) {
+        $_SESSION['success'] = 'Kategorija je uspješno izbrisana!';
+    } else {
+        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
+    }
 }
 
 // End categories
@@ -373,10 +544,200 @@ function display_children2($parent, $level, $level_colors)
         }
         ?>
     </ul>
-    <?php
+<?php
 }
 
 // End Items
+
+
+
+
+
+// Buyers
+
+function createBuyer()
+{
+    $checker = validateBuyer();
+    if ($checker != 1) {
+        global $conn;
+        $name = htmlentities($_POST['name']);
+        $surname = htmlentities($_POST['surname']);
+        $email = htmlentities($_POST['email']);
+        $address = htmlentities($_POST['address']);
+        $stmt = $conn->prepare("INSERT INTO buyers (name,surname,email,address) VALUES (?,?,?,?)");
+        $stmt->bind_param("ssss", $name, $surname, $email, $address);
+        if ($stmt->execute()) {
+            $_SESSION['success'] = 'Kupac je uspješno kreiran!';
+            return true;
+        }
+    }
+}
+
+function deleteBuyer()
+{
+    global $conn;
+    $user_id = $_GET['delete'];
+    $sql = "DELETE FROM buyers WHERE id = ? ";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    if ($stmt->execute()) {
+        $_SESSION['success'] = 'Kupac je uspješno izbrisan!';
+        $prevUrl = $_SESSION['prevUrl'];
+        header("location: $prevUrl ");
+        unset($_SESSION['prevUrl']);
+        exit();
+    } else {
+        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
+    }
+}
+
+function updateBuyer()
+{
+    $checker = validateBuyer();
+    if ($checker == 0) {
+        global $conn;
+        $name = test_input($_POST['name']);
+        $surname = test_input($_POST['surname']);
+        $email = test_input($_POST['email']);
+        $address = test_input($_POST['address']);
+        $id = test_input($_POST['id']);
+        $stmt = $conn->prepare("UPDATE buyers SET name = ?,surname = ?,email=? , address = ? WHERE id = ? ");
+        $stmt->bind_param("ssssi", $_POST['name'], $_POST['surname'], $_POST['email'], $_POST['address'], $_POST['id']);
+        if ($stmt->execute()) {
+            $_SESSION['success'] = 'Kupac je uspješno promjenjen!';
+            return true;
+        }
+    }
+}
+
+
+function validateBuyer()
+{
+    $checker = 0;
+    if (empty($_POST['name'])) {
+        echo "<div class='alert alert-danger'>Polje ime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['surname'])) {
+        echo "<div class='alert alert-danger'>Polje prezime je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['email'])) {
+        echo "<div class='alert alert-danger'>Polje email je obavezno</div>";
+        $checker = 1;
+    }
+    if (empty($_POST['address'])) {
+        echo "<div class='alert alert-danger'>Polje adresa je obavezno</div>";
+        $checker = 1;
+    }
+    return $checker;
+}
+
+// End Buyers
+
+
+
+
+// Orders
+
+function createOrder()
+{
+    $checker = 0;
+    $checker = validateBuyer();
+
+    if ($checker == 0) {
+        global $conn;
+        $name = test_input($_POST['name']);
+        $surname = test_input($_POST['surname']);
+        $email = test_input($_POST['email']);
+        $address = test_input($_POST['address']);
+        $time = date('Y-m-d H:i:s');;
+        $status = test_input($_POST['brand']);
+        $stmt = $conn->prepare("INSERT INTO orders (status_id ,name ,surname ,email,address,time) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("isssss", $status, $name, $surname, $email, $address, $time);
+        if ($stmt->execute()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+function getAllOrders()
+{
+    global $conn, $searchKey, $searchField;
+    $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
+    if (isset($searchKey)) {
+        $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
+        $sql = "SELECT * FROM orders WHERE $searchField LIKE ?"; // SQL with parameters
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('s', $search);
+    } else {
+        $sql = "SELECT * FROM orders"; // SQL with parameters
+        $stmt = $conn->prepare($sql);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result(); // get the mysqli result
+    $allRecrods = mysqli_num_rows($result);
+    // Calculate total pages
+    $totoalPages = ceil($allRecrods / $limit);
+    // Current pagination page number
+    $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
+    $prev = $page - 1;
+    $next = $page + 1;
+    // Offset
+    $paginationStart = ($page - 1) * $limit;
+    if (isset($searchKey)) {
+        $sql = $conn->prepare("SELECT orders.id,orders.name,orders.surname,orders.address,orders.email,orders.time,order_statuses.name AS status FROM orders INNER JOIN order_statuses ON order_statuses.id = orders.status_id WHERE orders.$searchField LIKE ? LIMIT $paginationStart, $limit");
+        $sql->bind_param("s", $search);
+        $sql->execute();
+        $resultsOrders = $sql->get_result();
+    } else {
+        $sql = $conn->prepare("SELECT orders.id,orders.name,orders.surname,orders.address,orders.email,orders.time,order_statuses.name AS status FROM orders INNER JOIN order_statuses ON order_statuses.id = orders.status_id LIMIT $paginationStart, $limit");
+        $sql->execute();
+        $resultsOrders = $sql->get_result();
+    }
+    return array($resultsOrders, $limit, $page, $prev, $next, $totoalPages);
+}
+
+function updateOrder()
+{
+    $checker = 0;
+    $checker = validateBuyer();
+    if (empty($_POST['time'])) {
+        echo "<div class='alert alert-danger'>Polje vrijeme je obavezno</div>";
+        $checker = 1;
+    }
+    if ($checker == 0) {
+        global $conn;
+        $name = test_input($_POST['name']);
+        $surname = test_input($_POST['surname']);
+        $email = test_input($_POST['email']);
+        $address = test_input($_POST['address']);
+        $time = test_input($_POST['time']);
+        $status = test_input($_POST['brand']);
+        $id = test_input($_POST['id']);
+        $stmt = $conn->prepare("UPDATE orders SET status_id = ?,name = ?,surname = ?,email=? , address = ?,time = ? WHERE id = ? ");
+        $stmt->bind_param("isssssi", $status, $name, $surname, $email, $address, $time, $id);
+        if ($stmt->execute()) {
+            $_SESSION['success'] = 'Narudžba je uspješno promjenjena!';
+            return true;
+        }
+    }
+    echo $conn->error;
+}
+
+
+
+// End Orders
+
+
+
+
+
+
+
+
 
 
 
@@ -451,108 +812,58 @@ function resetItemBrand()
 function pagination($main)
 {
     global $totoalPages, $page, $prev, $searchKey, $next, $search;
-    if (isset($search)) { ?>
-        <!--Pagination with search-->
-        <nav class="d-flex justify-content-center wow fadeIn">
-            <ul class="pagination pg-blue">
-                <!--Arrow left-->
-                <li class="page-item <?php if ($page <= 1) {
-                                            echo 'disabled';
-                                        } ?> ">
-                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                    echo '#';
-                                                } else {
-                                                    echo '?page=' . $prev . '&search=' . $searchKey;
-                                                } ?> " aria-label="Previous">
-                        <span aria-hidden="true"> &lArr;</span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                </li>
-                <?php
-                for ($i = 1; $i <= $totoalPages; $i++) {
-                ?>
-                    <li class="page-item <?php if ($page == $i) {
-                                                echo 'active';
-                                            }  ?>">
-                        <a class="page-link" href="<?php echo $main . '.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                            <?php if ($page == $i) {
-                            ?>
-                                <span class="sr-only">(current)</span>
-                            <?php
-                            } ?>
+?>
+    <!--Pagination -->
+    <nav class="d-flex justify-content-center wow fadeIn">
+        <ul class="pagination pg-blue">
+            <!--Arrow left-->
+            <li class="page-item <?php if ($page <= 1) {
+                                        echo 'disabled';
+                                    } ?> ">
+                <a class="page-link" href="<?php if ($page <= 1) {
+                                                echo '#';
+                                            } else {
+                                                echo '?page=' . $prev . '&search=' . $searchKey;
+                                            } ?> " aria-label="Previous">
+                    <span aria-hidden="true"> &lArr;</span>
+                    <span class="sr-only">Previous</span>
+                </a>
+            </li>
+            <?php
+            for ($i = 1; $i <= $totoalPages; $i++) {
+            ?>
+                <li class="page-item <?php if ($page == $i) {
+                                            echo 'active';
+                                        }  ?>">
+                    <a class="page-link" href="<?php echo $main . '.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
+                        <?php if ($page == $i) {
+                        ?>
+                            <span class="sr-only">(current)</span>
+                        <?php
+                        } ?>
 
-                        </a>
-                    </li>
-                <?php
-                }
-                ?>
-                <li class="page-item <?php if ($page >= $totoalPages) {
-                                            echo 'disabled';
-                                        } ?> ">
-                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                    echo '#';
-                                                } else {
-                                                    echo '?page=' . $next . '&search=' . $searchKey;
-                                                } ?> " aria-label="Next">
-                        <span aria-hidden="true">&rArr;</span>
-                        <span class="sr-only">Next</span>
                     </a>
                 </li>
-            </ul>
-        </nav>
-        <!--Pagination with search-->
-    <?php
-    } else { ?>
-        <!--Pagination without search-->
-        <nav class="d-flex justify-content-center wow fadeIn">
-            <ul class="pagination pg-blue">
-                <!--Arrow left-->
-                <li class="page-item <?php if ($page <= 1) {
-                                            echo 'disabled';
-                                        } ?> ">
-                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                    echo '#';
-                                                } else {
-                                                    echo '?page=' . $prev;
-                                                } ?> " aria-label="Previous">
-                        <span aria-hidden="true"> &lArr;</span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                </li>
-                <?php
-                for ($i = 1; $i <= $totoalPages; $i++) {
-                ?>
-                    <li class="page-item <?php if ($page == $i) {
-                                                echo 'active';
-                                            }  ?>">
-                        <a class="page-link" href="<?php echo $main . '.php?page=' . $i ?>"><?php echo $i ?>
-                            <?php if ($page == $i) {
-                            ?>
-                                <span class="sr-only">(current)</span>
-                            <?php
-                            } ?>
+            <?php
+            }
+            ?>
+            <li class="page-item <?php if ($page >= $totoalPages) {
+                                        echo 'disabled';
+                                    } ?> ">
+                <a class="page-link" href="<?php if ($page >= $totoalPages) {
+                                                echo '#';
+                                            } else {
+                                                echo '?page=' . $next . '&search=' . $searchKey;
+                                            } ?> " aria-label="Next">
+                    <span aria-hidden="true">&rArr;</span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <!--Pagination -->
+<?php
 
-                        </a>
-                    </li>
-                <?php
-                }
-                ?>
-                <li class="page-item <?php if ($page >= $totoalPages) {
-                                            echo 'disabled';
-                                        } ?> ">
-                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                    echo '#';
-                                                } else {
-                                                    echo '?page=' . $next;
-                                                } ?> " aria-label="Next">
-                        <span aria-hidden="true">&rArr;</span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <!--Pagination without search-->
-<?php }
 }
 
 function searchKeyNoField()

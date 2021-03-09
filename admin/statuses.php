@@ -5,6 +5,7 @@ include_once("includes/admin-header.php");
 ob_start();
 $searchKey = searchKeyNoField();
 $main = 'statuses';
+$table = 'order_statuses';
 ?>
 
 <body class="">
@@ -37,29 +38,12 @@ $main = 'statuses';
                 }
                 if (isset($_POST['edit'])) {
                     if (isset($_GET['id'])) {
-                        $name = $_POST['name'];
-                        $description = $_POST['description'];
-                        $id = $_GET['id'];
-                        $stmtImages = $conn->prepare("UPDATE order_statuses SET name = ?,description = ? WHERE id = ? ");
-                        $stmtImages->bind_param("ssi", $name, $description, $id);
-                        $stmtImages->execute();
-                        $_SESSION['success'] = 'Status ' . $name . ' je uspješno promjenjen!';
-                        header("location: statuses.php");
-                        exit();
                     } else {
-                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
+                        echo '<div class="alert alert-danger" role="alert">Nije odabran status za promjenu.</div>';
                     }
                 }
                 if (isset($_GET['delete'])) {
-                    $stmt = $conn->prepare("DELETE FROM order_statuses WHERE id = ?");
-                    $stmt->bind_param('i', $_GET['delete']);
-                    if ($stmt->execute()) {
-                        $_SESSION['success'] = 'Status je uspješno izbrisan!';
-                        header("location: statuses.php");
-                        exit();
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
-                    }
+                    deleteStatus();
                 }
                 if (isset($_SESSION['success'])) {
                     echo '<div class="alert alert-success" role="alert">' .  $_SESSION['success'] . '</div>';
@@ -91,14 +75,7 @@ $main = 'statuses';
                         </div>
                         <?php
                         if (isset($_GET['id'])) {
-                            $sql = "SELECT * FROM order_statuses WHERE id = ? LIMIT 1"; // SQL with parameters
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bind_param("i", $_GET['id']);
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $nums = mysqli_num_rows($result);
-                            //$user = $result->fetch_assoc(); // fetch data
-                            $brand = mysqli_fetch_assoc($result);
+                            $status = editStatus();
                         ?>
                             <div class="card">
                                 <div class="card-body">
@@ -106,7 +83,7 @@ $main = 'statuses';
                                     <form action="" method="post" enctype="multipart/form-data" name="edit" class="needs-validation" novalidate>
                                         <div class="form-group">
                                             <label for="category">Promjena imena statusa</label>
-                                            <input type="text" name="name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Ime kategorije" required value="<?php echo $brand['name'] ?>">
+                                            <input type="text" name="name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Ime kategorije" required value="<?php echo $status['name'] ?>">
                                             <div class="valid-feedback">
                                                 Super!
                                             </div>
@@ -115,7 +92,7 @@ $main = 'statuses';
                                             </div>
                                             <div class="form-group">
                                                 <label for="exampleInputPassword1">Opis statusa</label>
-                                                <textarea name="description" class="form-control" id="post_content" rows="7" required oninvalid="this.setCustomValidity('Unesite sadržaj objave!')" oninput="this.setCustomValidity('')"><?php echo $brand['description'] ?></textarea>
+                                                <textarea name="description" class="form-control" id="post_content" rows="7" required oninvalid="this.setCustomValidity('Unesite sadržaj objave!')" oninput="this.setCustomValidity('')"><?php echo $status['description'] ?></textarea>
                                                 <div class="valid-feedback">
                                                     Super!
                                                 </div>
@@ -137,20 +114,8 @@ $main = 'statuses';
                                 <h4 class="card-title"> Statusi</h4>
                             </div>
                             <div class="card-body">
-                                <form action="statuses.php" method="post" enctype="multipart/form-data">
-                                    <div class="container">
-                                        <div class="row align-items-center">
-
-                                            <div class="col-sm">
-                                                <label for="">Pretraga</label>
-                                                <input type="text" name="key" class="form-control">
-                                            </div>
-                                            <div class="col-sm">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                <form action="statuses.php" method="get" enctype="multipart/form-data">
+                                    <?php include("includes/admin-search-simple.php"); ?>
                                 </form>
                                 <div class="table-responsive">
                                     <table class="table tablesorter " id="">
@@ -171,37 +136,13 @@ $main = 'statuses';
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
-                                            if (isset($searchKey)) {
-                                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                                $sql = "SELECT * FROM order_statuses WHERE name LIKE ?"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                                $stmt->bind_param('s', $search);
-                                            } else {
-                                                $sql = "SELECT * FROM order_statuses"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                            }
-                                            $stmt->execute();
-                                            $result = $stmt->get_result(); // get the mysqli result
-                                            $allRecrods = mysqli_num_rows($result);
-                                            // Calculate total pages
-                                            $totoalPages = ceil($allRecrods / $limit);
-                                            // Current pagination page number
-                                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                            $prev = $page - 1;
-                                            $next = $page + 1;
-                                            // Offset
-                                            $paginationStart = ($page - 1) * $limit;
-                                            if (isset($searchKey)) {
-                                                $sql = $conn->prepare("SELECT * FROM order_statuses WHERE name LIKE ? LIMIT $paginationStart, $limit");
-                                                $sql->bind_param("s", $search);
-                                                $sql->execute();
-                                                $resultsStatuses = $sql->get_result();
-                                            } else {
-                                                $sql = $conn->prepare("SELECT * FROM order_statuses LIMIT $paginationStart, $limit");
-                                                $sql->execute();
-                                                $resultsStatuses = $sql->get_result();
-                                            }
+                                            $getStatusData = getAll($table);
+                                            $resultsStatuses = $getStatusData[0];
+                                            $limit = $getStatusData[1];
+                                            $page = $getStatusData[2];
+                                            $prev = $getStatusData[3];
+                                            $next = $getStatusData[4];
+                                            $totoalPages = $getStatusData[5];
                                             while ($row = mysqli_fetch_assoc($resultsStatuses)) {
                                             ?>
                                                 <tr>

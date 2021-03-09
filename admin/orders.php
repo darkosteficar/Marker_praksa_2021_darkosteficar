@@ -12,6 +12,13 @@ if (isset($_POST['search'])) {
     $searchField = $_GET['field'];
 }
 
+$main = 'orders';
+
+if (isset($_POST['edit'])) {
+    updateOrder();
+}
+
+
 ?>
 
 
@@ -32,7 +39,12 @@ if (isset($_POST['search'])) {
             ?>
             <!-- End Navbar -->
             <div class="content">
-
+                <?php
+                if (isset($_SESSION['success'])) {
+                    echo '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
+                    unset($_SESSION['success']);
+                }
+                ?>
                 <div class="row">
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
@@ -50,9 +62,10 @@ if (isset($_POST['search'])) {
                             </tr>
                         </thead>
                         <tbody>
-                            <form action="orders.php" method="post" enctype="multipart/form-data">
-                                <div class="container">
-                                    <div class="row align-items-center justify-content-start">
+                            <div class="container">
+                                <div class="row align-items-center justify-content-start">
+                                    <form action="orders.php" method="post" enctype="multipart/form-data">
+
 
                                         <div class="col-sm-3">
                                             <input type="text" name="key" class="form-control" placeholder="Pretraga">
@@ -72,41 +85,21 @@ if (isset($_POST['search'])) {
                                                 </select>
                                             </div>
                                         </div>
+                                    </form>
+                                    <div class="col-sm-2 ml-5">
+                                        <a href="add-order.php"><button class="btn btn-success btn-md" type="submit" name="search">Dodaj narudžbu</button></a>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
+
                             <?php
-                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
-                            if (isset($searchKey)) {
-                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                $sql = "SELECT * FROM orders WHERE $searchField LIKE ?"; // SQL with parameters
-                                $stmt = $conn->prepare($sql);
-                                $stmt->bind_param('s', $search);
-                            } else {
-                                $sql = "SELECT * FROM orders"; // SQL with parameters
-                                $stmt = $conn->prepare($sql);
-                            }
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $allRecrods = mysqli_num_rows($result);
-                            // Calculate total pages
-                            $totoalPages = ceil($allRecrods / $limit);
-                            // Current pagination page number
-                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                            $prev = $page - 1;
-                            $next = $page + 1;
-                            // Offset
-                            $paginationStart = ($page - 1) * $limit;
-                            if (isset($searchKey)) {
-                                $sql = $conn->prepare("SELECT orders.id,orders.name,orders.surname,orders.address,orders.email,orders.time,order_statuses.name AS status FROM orders INNER JOIN order_statuses ON order_statuses.id = orders.id WHERE orders.$searchField LIKE ? LIMIT $paginationStart, $limit");
-                                $sql->bind_param("s", $search);
-                                $sql->execute();
-                                $resultsOrders = $sql->get_result();
-                            } else {
-                                $sql = $conn->prepare("SELECT orders.id,orders.name,orders.surname,orders.address,orders.email,orders.time,order_statuses.name AS status FROM orders INNER JOIN order_statuses ON order_statuses.id = orders.id LIMIT $paginationStart, $limit");
-                                $sql->execute();
-                                $resultsOrders = $sql->get_result();
-                            }
+                            $getOrders = getAllOrders();
+                            $resultsOrders = $getOrders[0];
+                            $limit = $getOrders[1];
+                            $page = $getOrders[2];
+                            $prev = $getOrders[3];
+                            $next = $getOrders[4];
+                            $totoalPages = $getOrders[5];
 
                             //$user = $result->fetch_assoc(); // fetch data 
                             while ($row = mysqli_fetch_assoc($resultsOrders)) {
@@ -151,108 +144,9 @@ if (isset($_POST['search'])) {
                 </div>
                 <!-- Pagination -->
 
-                <?php if (isset($search)) { ?>
-                    <!--Pagination with search-->
-                    <nav class="d-flex justify-content-center wow fadeIn">
-                        <ul class="pagination pg-blue">
-                            <!--Arrow left-->
-                            <li class="page-item <?php if ($page <= 1) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page <= 1) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $prev . '&search=' . $searchKey;
-                                                            } ?> " aria-label="Previous">
-                                    <span aria-hidden="true"> &lArr;</span>
-                                    <span class="sr-only">Previous</span>
-                                </a>
-                            </li>
-                            <?php
-                            for ($i = 1; $i <= $totoalPages; $i++) {
-                            ?>
-                                <li class="page-item <?php if ($page == $i) {
-                                                            echo 'active';
-                                                        }  ?>">
-                                    <a class="page-link" href="<?php echo 'statuses.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                        <?php if ($page == $i) {
-                                        ?>
-                                            <span class="sr-only">(current)</span>
-                                        <?php
-                                        } ?>
 
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            ?>
-                            <li class="page-item <?php if ($page >= $totoalPages) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $next . '&search=' . $searchKey;
-                                                            } ?> " aria-label="Next">
-                                    <span aria-hidden="true">&rArr;</span>
-                                    <span class="sr-only">Next</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <!--Pagination with search-->
-                <?php
-                } else { ?>
-                    <!--Pagination without search-->
-                    <nav class="d-flex justify-content-center wow fadeIn">
-                        <ul class="pagination pg-blue">
-                            <!--Arrow left-->
-                            <li class="page-item <?php if ($page <= 1) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page <= 1) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $prev;
-                                                            } ?> " aria-label="Previous">
-                                    <span aria-hidden="true"> &lArr;</span>
-                                    <span class="sr-only">Previous</span>
-                                </a>
-                            </li>
-                            <?php
-                            for ($i = 1; $i <= $totoalPages; $i++) {
-                            ?>
-                                <li class="page-item <?php if ($page == $i) {
-                                                            echo 'active';
-                                                        }  ?>">
-                                    <a class="page-link" href="<?php echo 'statuses.php?page=' . $i ?>"><?php echo $i ?>
-                                        <?php if ($page == $i) {
-                                        ?>
-                                            <span class="sr-only">(current)</span>
-                                        <?php
-                                        } ?>
+                <?php pagination($main); ?>
 
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            ?>
-                            <li class="page-item <?php if ($page >= $totoalPages) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $next;
-                                                            } ?> " aria-label="Next">
-                                    <span aria-hidden="true">&rArr;</span>
-                                    <span class="sr-only">Next</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <!--Pagination without search-->
-                <?php } ?>
                 <!-- End Pagination -->
             </div>
 

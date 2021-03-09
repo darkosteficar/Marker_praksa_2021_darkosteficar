@@ -28,7 +28,7 @@
      <div class="modal-dialog modal-lg " role="document" style="vertical-align: top;">
          <div class=" modal-content">
              <div class=" modal-header">
-                 <h5 class="modal-title" id="exampleModalLabel">Promjene u proizvodu</h5>
+                 <h5 class="modal-title" id="exampleModalLabel">Promjene u narudžbi</h5>
                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                      <i class="tim-icons icon-simple-remove"></i>
                  </button>
@@ -43,19 +43,69 @@
                          <div class="form-group">
                              <label for="inputState">Status</label>
                              <select class="custom-select" id="inputState" class="form-control" name="brand" style="background-color: gray;">
-                                 <option value="<?php echo $item['brand_id'] ?>">Bez promjene</option>
+                                 <option value="<?php echo $row['status'] ?>">Bez promjene</option>
                                  <?php
                                     $stmt = $conn->prepare("SELECT * FROM order_statuses");
                                     $stmt->execute();
                                     $results = $stmt->get_result();
-                                    while ($row = mysqli_fetch_assoc($results)) {
+                                    while ($row1 = mysqli_fetch_assoc($results)) {
                                     ?>
-                                     <option value="<?php echo $row['id'] ?>"><?php echo $row['name'] ?></option>
+                                     <option value="<?php echo $row1['id'] ?>"><?php echo $row1['name'] ?></option>
 
                                  <?php
                                     }
                                     ?>
                              </select>
+                         </div>
+                         <div class="form-group">
+                             <label for="exampleInputEmail1">Ime</label>
+                             <input name="name" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<?php echo $row['name'] ?>" required oninvalid="this.setCustomValidity('Unesite ime!')" oninput="this.setCustomValidity('')">
+                             <div class="valid-feedback">
+                                 Super!
+                             </div>
+                             <div class="invalid-feedback">
+                                 Molimo unesite ime.
+                             </div>
+                         </div>
+                         <div class="form-group">
+                             <label for="exampleInputEmail1">Prezime</label>
+                             <input name="surname" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<?php echo $row['surname'] ?>" required oninvalid="this.setCustomValidity('Unesite prezime!')" oninput="this.setCustomValidity('')">
+                             <div class="valid-feedback">
+                                 Super!
+                             </div>
+                             <div class="invalid-feedback">
+                                 Molimo unesite prezime.
+                             </div>
+                         </div>
+                         <div class="form-group">
+                             <label for="exampleInputEmail1">Adresa</label>
+                             <input name="address" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<?php echo $row['address'] ?>" required oninvalid="this.setCustomValidity('Unesite adresu!')" oninput="this.setCustomValidity('')">
+                             <div class="valid-feedback">
+                                 Super!
+                             </div>
+                             <div class="invalid-feedback">
+                                 Molimo unesite adresu.
+                             </div>
+                         </div>
+                         <div class="form-group">
+                             <label for="exampleInputEmail1">Email</label>
+                             <input name="email" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<?php echo $row['email'] ?>" required oninvalid="this.setCustomValidity('Unesite email!')" oninput="this.setCustomValidity('')">
+                             <div class="valid-feedback">
+                                 Super!
+                             </div>
+                             <div class="invalid-feedback">
+                                 Molimo unesite email.
+                             </div>
+                         </div>
+                         <div class="form-group">
+                             <label for="exampleInputEmail1">Datum</label>
+                             <input name="time" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<?php echo $row['time'] ?>" required oninvalid="this.setCustomValidity('Unesite datum!')" oninput="this.setCustomValidity('')">
+                             <div class="valid-feedback">
+                                 Super!
+                             </div>
+                             <div class="invalid-feedback">
+                                 Molimo unesite datum.
+                             </div>
                          </div>
 
 

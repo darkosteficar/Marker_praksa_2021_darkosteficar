@@ -3,10 +3,10 @@
 
         <div class="col-sm">
             <label for="">Pretraga</label>
-            <input type="text" name="key" class="form-control">
+            <input type="text" name="search" class="form-control">
         </div>
         <div class="col-sm">
-            <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
+            <button class="btn btn-success btn-md" type="submit">Pretraži</button>
         </div>
 
     </div>
