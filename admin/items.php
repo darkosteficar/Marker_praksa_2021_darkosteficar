@@ -12,6 +12,8 @@ if (isset($_POST['search'])) {
     $searchField = $_GET['field'];
 }
 
+$main = 'items';
+
 ?>
 
 
@@ -75,14 +77,14 @@ if (isset($_POST['search'])) {
                             </tr>
                         </thead>
                         <tbody>
-                            <form action="items.php" method="post" enctype="multipart/form-data">
+                            <form action="items.php" method="get" enctype="multipart/form-data">
                                 <div class="container">
                                     <div class="row align-items-center justify-content-start">
                                         <div class="col-sm-3">
-                                            <input type="text" name="key" class="form-control" placeholder="Pretraga">
+                                            <input type="text" name="search" class="form-control" placeholder="Pretraga">
                                         </div>
                                         <div class="col-sm-2">
-                                            <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
+                                            <button class="btn btn-success btn-md" type="submit">Pretraži</button>
                                         </div>
                                         <div class="col-sm-3">
                                             <div class="form-group ">
@@ -100,38 +102,7 @@ if (isset($_POST['search'])) {
                                 </div>
                             </form>
                             <?php
-                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 2;
-                            if (isset($searchKey)) {
-                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                $sql = "SELECT items.name,items.id,items.base_price,brands.name FROM items INNER JOIN brands ON brands.id = items.brand_id WHERE items.$searchField LIKE ?"; // SQL with parameters
-                                $stmt = $conn->prepare($sql);
-                                $stmt->bind_param('s', $search);
-                            } else {
-                                $sql = "SELECT items.name,items.id,items.base_price,brands.name FROM items INNER JOIN brands ON brands.id = items.brand_id";
-                                $stmt = $conn->prepare($sql);
-                            }
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $allRecrods = mysqli_num_rows($result);
-                            // Calculate total pages
-                            $totoalPages = ceil($allRecrods / $limit);
-                            // Current pagination page number
-                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                            $prev = $page - 1;
-                            $next = $page + 1;
-                            // Offset
-                            $paginationStart = ($page - 1) * $limit;
-                            if (isset($searchKey)) {
-                                $sql = $conn->prepare("SELECT items.name,items.discount,items.active,items.highlighted,items.id,items.base_price,items.description,items.avaliable_stock,items.allow_resupply,brands.name AS brand FROM items INNER JOIN brands ON brands.id = items.brand_id WHERE items.$searchField LIKE ? LIMIT $paginationStart, $limit");
-                                $sql->bind_param("s", $search);
-                                $sql->execute();
-                                $resultsOrders = $sql->get_result();
-                            } else {
-                                $sql = $conn->prepare("SELECT items.name,items.discount,items.active,items.highlighted,items.id,items.base_price,items.description,items.avaliable_stock,items.allow_resupply,brands.name AS brand FROM items INNER JOIN brands ON brands.id = items.brand_id LIMIT $paginationStart, $limit");
-                                $sql->execute();
-                                $resultsOrders = $sql->get_result();
-                            }
-
+                            list($resultsOrders, $limit, $page, $prev, $next, $totoalPages) = getAllItems();
                             //$user = $result->fetch_assoc(); // fetch data 
                             while ($row = mysqli_fetch_assoc($resultsOrders)) {
                             ?>
@@ -175,108 +146,7 @@ if (isset($_POST['search'])) {
 
                 </div>
                 <!-- Pagination -->
-                <?php if (isset($search)) { ?>
-                    <!--Pagination with search-->
-                    <nav class="d-flex justify-content-center wow fadeIn">
-                        <ul class="pagination pg-blue">
-                            <!--Arrow left-->
-                            <li class="page-item <?php if ($page <= 1) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page <= 1) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $prev . '&search=' . $searchKey;
-                                                            } ?> " aria-label="Previous">
-                                    <span aria-hidden="true"> &lArr;</span>
-                                    <span class="sr-only">Previous</span>
-                                </a>
-                            </li>
-                            <?php
-                            for ($i = 1; $i <= $totoalPages; $i++) {
-                            ?>
-                                <li class="page-item <?php if ($page == $i) {
-                                                            echo 'active';
-                                                        }  ?>">
-                                    <a class="page-link" href="<?php echo 'items.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                        <?php if ($page == $i) {
-                                        ?>
-                                            <span class="sr-only">(current)</span>
-                                        <?php
-                                        } ?>
-
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            ?>
-                            <li class="page-item <?php if ($page >= $totoalPages) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $next . '&search=' . $searchKey;
-                                                            } ?> " aria-label="Next">
-                                    <span aria-hidden="true">&rArr;</span>
-                                    <span class="sr-only">Next</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <!--Pagination with search-->
-                <?php
-                } else { ?>
-                    <!--Pagination without search-->
-                    <nav class="d-flex justify-content-center wow fadeIn">
-                        <ul class="pagination pg-blue">
-                            <!--Arrow left-->
-                            <li class="page-item <?php if ($page <= 1) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page <= 1) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $prev;
-                                                            } ?> " aria-label="Previous">
-                                    <span aria-hidden="true"> &lArr;</span>
-                                    <span class="sr-only">Previous</span>
-                                </a>
-                            </li>
-                            <?php
-                            for ($i = 1; $i <= $totoalPages; $i++) {
-                            ?>
-                                <li class="page-item <?php if ($page == $i) {
-                                                            echo 'active';
-                                                        }  ?>">
-                                    <a class="page-link" href="<?php echo 'items.php?page=' . $i ?>"><?php echo $i ?>
-                                        <?php if ($page == $i) {
-                                        ?>
-                                            <span class="sr-only">(current)</span>
-                                        <?php
-                                        } ?>
-
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            ?>
-                            <li class="page-item <?php if ($page >= $totoalPages) {
-                                                        echo 'disabled';
-                                                    } ?> ">
-                                <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                echo '#';
-                                                            } else {
-                                                                echo '?page=' . $next;
-                                                            } ?> " aria-label="Next">
-                                    <span aria-hidden="true">&rArr;</span>
-                                    <span class="sr-only">Next</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <!--Pagination without search-->
-                <?php } ?>
+                <?php pagination($main); ?>
                 <!-- End Pagination -->
             </div>
         </div>

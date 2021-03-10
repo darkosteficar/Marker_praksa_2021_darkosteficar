@@ -189,13 +189,7 @@ $main = 'categories';
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $getCategories = getAll($main);
-                                            $resultsCategories = $getCategories[0];
-                                            $limit = $getCategories[1];
-                                            $page = $getCategories[2];
-                                            $prev = $getCategories[3];
-                                            $next = $getCategories[4];
-                                            $totoalPages = $getCategories[5];
+                                            list($resultsCategories, $limit, $page, $prev, $next, $totoalPages) = getAll($main);
 
                                             while ($row = mysqli_fetch_assoc($resultsCategories)) {
                                             ?>
@@ -235,7 +229,6 @@ $main = 'categories';
 
 
                                     <!-- Pagination -->
-
                                     <?php pagination($main); ?>
                                     <!-- End Pagination -->
                                 </div>

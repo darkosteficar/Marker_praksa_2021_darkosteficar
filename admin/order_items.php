@@ -37,15 +37,16 @@ if ($sessionRole != 'admin') {
 }
 
 if (isset($_GET['delete'])) {
-    $user_id = $_GET['delete'];
-    $sql = "DELETE FROM buyers WHERE id = ? ";
+    $order = $_GET['order'];
+    $item = $_GET['delete'];
+    $sql = "DELETE FROM order_items WHERE order_id = ? AND item_id = ? ";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param("ii", $order, $item);
     $stmt->execute();
+    $_SESSION['success'] = 'Proizvod je uspješno izbrisan!';
     $prevUrl = $_SESSION['prevUrl'];
     header("location: $prevUrl ");
     unset($_SESSION['prevUrl']);
-    echo '<div class="alert alert-success" role="alert">Kupac uspješno obrisan.</div>';
 }
 ?>
 

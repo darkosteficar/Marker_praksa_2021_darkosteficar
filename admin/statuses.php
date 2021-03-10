@@ -136,13 +136,7 @@ $table = 'order_statuses';
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $getStatusData = getAll($table);
-                                            $resultsStatuses = $getStatusData[0];
-                                            $limit = $getStatusData[1];
-                                            $page = $getStatusData[2];
-                                            $prev = $getStatusData[3];
-                                            $next = $getStatusData[4];
-                                            $totoalPages = $getStatusData[5];
+                                            list($resultsStatuses, $limit, $page, $prev, $next, $totoalPages) = getAll($table);
                                             while ($row = mysqli_fetch_assoc($resultsStatuses)) {
                                             ?>
                                                 <tr>

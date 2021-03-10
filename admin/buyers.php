@@ -12,7 +12,6 @@ if (isset($_POST['search'])) {
     $searchField = $_GET['field'];
 }
 
-
 $table = 'buyers';
 $main = 'buyers';
 ?>
@@ -20,30 +19,19 @@ $main = 'buyers';
 if (isset($_POST['edit'])) {
     updateBuyer();
 }
-$sessionRole = 'admin';
-if ($sessionRole != 'admin') {
-    header('location: brands.php');
-}
 ?>
-
 
 <body class="">
     <div class="wrapper">
         <div class="sidebar">
-            <!--
-            Tip 1: You can change the color of the sidebar using: data-color="blue | green | orange | red"
-             -->
             <?php
-
             include_once("includes/admin-sidebar.php");
-
             ?>
         </div>
         <div class="main-panel">
             <!-- Navbar -->
             <?php
             include_once("includes/admin-navbar.php");
-
             ?>
             <!-- End Navbar -->
             <div class="content">
@@ -75,15 +63,12 @@ if ($sessionRole != 'admin') {
                             <div class="card-body">
                                 <div class="container">
                                     <div class="row align-items-center justify-content-start">
-                                        <form action="buyers.php" method="post" enctype="multipart/form-data">
-
-
-
+                                        <form action="buyers.php" method="get" enctype="multipart/form-data">
                                             <div class="col-sm-3">
-                                                <input type="text" name="key" class="form-control" placeholder="Pretraga">
+                                                <input type="text" name="search" class="form-control" placeholder="Pretraga">
                                             </div>
                                             <div class="col-sm-2">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
+                                                <button class="btn btn-success btn-md" type="submit">Pretraži</button>
                                             </div>
                                             <div class="col-sm-3 mr-5">
                                                 <div class="form-group ">
@@ -96,8 +81,6 @@ if ($sessionRole != 'admin') {
                                                     </select>
                                                 </div>
                                             </div>
-
-
                                         </form>
                                         <div class="col-sm-2 ml-5">
                                             <a href="add-buyer.php"><button class="btn btn-success btn-md" type="submit" name="search">Dodaj kupca</button></a>
@@ -105,13 +88,7 @@ if ($sessionRole != 'admin') {
                                     </div>
                                 </div>
                                 <?php
-                                $getBuyerData = getAll($table);
-                                $resultsBuyers = $getBuyerData[0];
-                                $limit = $getBuyerData[1];
-                                $page = $getBuyerData[2];
-                                $prev = $getBuyerData[3];
-                                $next = $getBuyerData[4];
-                                $totoalPages = $getBuyerData[5];
+                                list($resultsBuyers, $limit, $page, $prev, $next, $totoalPages) = getAllWithField($table);
                                 while ($row = mysqli_fetch_assoc($resultsBuyers)) {
                                 ?>
                                     <tr>
@@ -120,12 +97,8 @@ if ($sessionRole != 'admin') {
                                         <td><?php echo $row['surname'] ?></td>
                                         <td><?php echo $row['email'] ?></td>
                                         <td><?php echo $row['address'] ?></td>
-                                        <?php
-
-                                        $userAdmin = '';
-                                        ?>
                                         <td class="td-actions text-center">
-                                            <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon <?php echo $userAdmin ?>" data-toggle="modal" data-target="#exampleModal3<?php echo $row['id'] ?>">
+                                            <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon" data-toggle="modal" data-target="#exampleModal3<?php echo $row['id'] ?>">
                                                 <i class="tim-icons icon-settings"></i>
                                             </button>
                                         </td>

@@ -43,7 +43,7 @@
                          <div class="form-group">
                              <label for="inputState">Status</label>
                              <select class="custom-select" id="inputState" class="form-control" name="brand" style="background-color: gray;">
-                                 <option value="<?php echo $row['status'] ?>">Bez promjene</option>
+                                 <option value="<?php echo $row['status_id'] ?>">Bez promjene</option>
                                  <?php
                                     $stmt = $conn->prepare("SELECT * FROM order_statuses");
                                     $stmt->execute();

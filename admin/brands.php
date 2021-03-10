@@ -110,13 +110,7 @@ $main = 'brands';
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $getBrandData = getAll($main);
-                                            $resultsBrands = $getBrandData[0];
-                                            $limit = $getBrandData[1];
-                                            $page = $getBrandData[2];
-                                            $prev = $getBrandData[3];
-                                            $next = $getBrandData[4];
-                                            $totoalPages = $getBrandData[5];
+                                            list($resultsBrands, $limit, $page, $prev, $next, $totoalPages) = getAll($main);
                                             while ($row = mysqli_fetch_assoc($resultsBrands)) {
                                             ?>
                                                 <tr>

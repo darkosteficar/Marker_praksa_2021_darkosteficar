@@ -5,7 +5,7 @@ include_once("includes/admin-header.php");
 ob_start();
 
 $searchKey = searchKeyNoField();
-
+$main = 'attributes';
 ?>
 
 <body class="">
@@ -31,30 +31,10 @@ $searchKey = searchKeyNoField();
                     }
                 }
                 if (isset($_POST['edit'])) {
-                    if (isset($_GET['id'])) {
-                        $name = $_POST['name'];
-                        $value = $_POST['value'];
-                        $id = $_GET['id'];
-                        $stmtImages = $conn->prepare("UPDATE attributes SET name = ?,value = ? WHERE id = ? ");
-                        $stmtImages->bind_param("ssi", $name, $value, $id);
-                        $stmtImages->execute();
-                        $_SESSION['success'] = 'Atribut ' . $name . ' je uspješno promjenjen!';
-                        header("location: attributes.php");
-                        exit();
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert">Nije odabrana kategorija za promjenu.</div>';
-                    }
+                    updateAttribute();
                 }
                 if (isset($_GET['delete'])) {
-                    $stmt = $conn->prepare("DELETE FROM attributes WHERE id = ?");
-                    $stmt->bind_param('i', $_GET['delete']);
-                    if ($stmt->execute()) {
-                        $_SESSION['success'] = 'Atribut je uspješno izbrisan!';
-                        header("location: attributes.php");
-                        exit();
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert"> Dogodila se greška. </div>';
-                    }
+                    deleteAttribute();
                 }
                 if (isset($_SESSION['success'])) {
                     echo '<div class="alert alert-success" role="alert">' .  $_SESSION['success'] . '</div>';
@@ -91,14 +71,7 @@ $searchKey = searchKeyNoField();
                         </div>
                         <?php
                         if (isset($_GET['id'])) {
-                            $sql = "SELECT * FROM attributes WHERE id = ? LIMIT 1"; // SQL with parameters
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bind_param("i", $_GET['id']);
-                            $stmt->execute();
-                            $result = $stmt->get_result(); // get the mysqli result
-                            $nums = mysqli_num_rows($result);
-                            //$user = $result->fetch_assoc(); // fetch data
-                            $attribute = mysqli_fetch_assoc($result);
+                            $attribute = editAttribute();
                         ?>
                             <div class="card">
                                 <div class="card-body">
@@ -135,19 +108,7 @@ $searchKey = searchKeyNoField();
                             </div>
                             <div class="card-body">
                                 <form action="attributes.php" method="post" enctype="multipart/form-data">
-                                    <div class="container">
-                                        <div class="row align-items-center">
-
-                                            <div class="col-sm">
-                                                <label for="">Pretraga</label>
-                                                <input type="text" name="key" class="form-control">
-                                            </div>
-                                            <div class="col-sm">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                    <?php include("includes/admin-search-simple.php"); ?>
                                 </form>
                                 <div class="table-responsive">
                                     <table class="table tablesorter " id="">
@@ -168,40 +129,7 @@ $searchKey = searchKeyNoField();
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 3;
-                                            if (isset($searchKey)) {
-                                                $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                                $sql = "SELECT * FROM attributes WHERE name LIKE ?"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                                $stmt->bind_param('s', $search);
-                                            } else {
-                                                $sql = "SELECT * FROM attributes"; // SQL with parameters
-                                                $stmt = $conn->prepare($sql);
-                                            }
-                                            $stmt->execute();
-                                            $result = $stmt->get_result(); // get the mysqli result
-                                            $allRecrods = mysqli_num_rows($result);
-                                            // Calculate total pages
-                                            $totoalPages = ceil($allRecrods / $limit);
-                                            // Current pagination page number
-                                            $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                            $prev = $page - 1;
-                                            $next = $page + 1;
-                                            // Offset
-                                            $paginationStart = ($page - 1) * $limit;
-                                            if (isset($searchKey)) {
-                                                $sql = $conn->prepare("SELECT * FROM attributes WHERE name LIKE ? LIMIT $paginationStart, $limit");
-                                                $sql->bind_param("s", $search);
-                                                $sql->execute();
-                                                $resultsAttributes = $sql->get_result();
-                                            } else {
-                                                $sql = $conn->prepare("SELECT * FROM attributes LIMIT $paginationStart, $limit");
-                                                $sql->execute();
-                                                $resultsAttributes = $sql->get_result();
-                                            }
-
-
-
+                                            list($resultsAttributes, $limit, $page, $prev, $next, $totoalPages) = getAll($main);
 
                                             //$user = $result->fetch_assoc(); // fetch data
                                             while ($row = mysqli_fetch_assoc($resultsAttributes)) {
@@ -235,109 +163,9 @@ $searchKey = searchKeyNoField();
                                         </tbody>
                                     </table>
                                     <!-- Pagination -->
-
-                                    <?php if (isset($search)) { ?>
-                                        <!--Pagination with search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'attributes.php?page=' . $i . '&search=' . $searchKey ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next . '&search=' . $searchKey;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination with search-->
                                     <?php
-                                    } else { ?>
-                                        <!--Pagination without search-->
-                                        <nav class="d-flex justify-content-center wow fadeIn">
-                                            <ul class="pagination pg-blue">
-                                                <!--Arrow left-->
-                                                <li class="page-item <?php if ($page <= 1) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page <= 1) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $prev;
-                                                                                } ?> " aria-label="Previous">
-                                                        <span aria-hidden="true"> &lArr;</span>
-                                                        <span class="sr-only">Previous</span>
-                                                    </a>
-                                                </li>
-                                                <?php
-                                                for ($i = 1; $i <= $totoalPages; $i++) {
-                                                ?>
-                                                    <li class="page-item <?php if ($page == $i) {
-                                                                                echo 'active';
-                                                                            }  ?>">
-                                                        <a class="page-link" href="<?php echo 'attributes.php?page=' . $i ?>"><?php echo $i ?>
-                                                            <?php if ($page == $i) {
-                                                            ?>
-                                                                <span class="sr-only">(current)</span>
-                                                            <?php
-                                                            } ?>
-
-                                                        </a>
-                                                    </li>
-                                                <?php
-                                                }
-                                                ?>
-                                                <li class="page-item <?php if ($page >= $totoalPages) {
-                                                                            echo 'disabled';
-                                                                        } ?> ">
-                                                    <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                                                    echo '#';
-                                                                                } else {
-                                                                                    echo '?page=' . $next;
-                                                                                } ?> " aria-label="Next">
-                                                        <span aria-hidden="true">&rArr;</span>
-                                                        <span class="sr-only">Next</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                        <!--Pagination without search-->
-                                    <?php } ?>
+                                    pagination($main);
+                                    ?>
                                     <!-- End Pagination -->
                                 </div>
                             </div>

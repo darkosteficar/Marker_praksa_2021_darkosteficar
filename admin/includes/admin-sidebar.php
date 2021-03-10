@@ -19,7 +19,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'products')) {
                 echo 'class="active"';
             } ?>>
-            <a href="items.php">
+            <a href="items.php?search=">
                 <i class="tim-icons icon-tv-2"></i>
                 <p>Proizvodi</p>
             </a>
@@ -35,7 +35,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'buyers')) {
                 echo 'class="active"';
             } ?>>
-            <a href="buyers.php">
+            <a href="buyers.php?search=">
                 <i class="tim-icons icon-single-02"></i>
                 <p>Kupci</p>
             </a>
@@ -43,7 +43,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'orders')) {
                 echo 'class="active"';
             } ?>>
-            <a href="orders.php">
+            <a href="orders.php?search=">
                 <i class="tim-icons icon-single-02"></i>
                 <p>Narudžbe</p>
             </a>
@@ -51,7 +51,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'attributes')) {
                 echo 'class="active"';
             } ?>>
-            <a href="attributes.php">
+            <a href="attributes.php?search=">
                 <i class="tim-icons icon-single-02"></i>
                 <p>Atributi</p>
             </a>
@@ -67,7 +67,7 @@ $url = $_SERVER['REQUEST_URI'];
         <li <?php if (strpos($url, 'categories.php')) {
                 echo 'class="active"';
             } ?>">
-            <a href="categories.php">
+            <a href="categories.php?search=">
                 <i class="tim-icons icon-components"></i>
                 <p>Kategorije</p>
             </a>

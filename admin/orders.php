@@ -17,7 +17,9 @@ $main = 'orders';
 if (isset($_POST['edit'])) {
     updateOrder();
 }
-
+if (isset($_GET['delete'])) {
+    deleteOrder();
+}
 
 ?>
 
@@ -93,19 +95,10 @@ if (isset($_POST['edit'])) {
                             </div>
 
                             <?php
-                            $getOrders = getAllOrders();
-                            $resultsOrders = $getOrders[0];
-                            $limit = $getOrders[1];
-                            $page = $getOrders[2];
-                            $prev = $getOrders[3];
-                            $next = $getOrders[4];
-                            $totoalPages = $getOrders[5];
-
-                            //$user = $result->fetch_assoc(); // fetch data 
+                            list($resultsOrders, $limit, $page, $prev, $next, $totoalPages) = getAllOrders();
                             while ($row = mysqli_fetch_assoc($resultsOrders)) {
                             ?>
                                 <tr>
-
                                     <td><?php echo $row['id'] ?></td>
                                     <td><?php echo $row['name'] ?></td>
                                     <td><?php echo $row['surname'] ?></td>
@@ -113,9 +106,7 @@ if (isset($_POST['edit'])) {
                                     <td><?php echo $row['email'] ?></td>
                                     <td><?php echo $row['time'] ?></td>
                                     <td><?php echo $row['status'] ?></td>
-
                                     <td class="td-actions text-center">
-
                                         <button type="button" rel="tooltip" class="btn btn-info btn-sm btn-icon <?php echo $userAdmin ?>" data-toggle="modal" data-target="#exampleModal3<?php echo $row['id'] ?>">
                                             <i class="tim-icons icon-settings"></i>
                                         </button>
@@ -131,7 +122,6 @@ if (isset($_POST['edit'])) {
                                         <button type="button" rel="tooltip" class="btn btn-danger btn-sm btn-icon " data-toggle="modal" data-target="#exampleModal1<?php echo $row['id'] ?>">
                                             <i class="tim-icons icon-simple-remove"></i>
                                         </button>
-
                                     </td>
                                     <?php include("includes/modals-orders.php") ?>
                                 </tr>
@@ -143,10 +133,7 @@ if (isset($_POST['edit'])) {
 
                 </div>
                 <!-- Pagination -->
-
-
                 <?php pagination($main); ?>
-
                 <!-- End Pagination -->
             </div>
 

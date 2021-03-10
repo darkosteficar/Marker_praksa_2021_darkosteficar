@@ -5,15 +5,23 @@ include_once("includes/admin-header.php");
 ob_start();
 
 
-if (!isset($_GET['order'])) {
-    header("location:orders.php");
+
+
+if (isset($_POST['add'])) {
+    $item = test_input($_POST['item']);
+    $price = test_input($_POST['price']);
+    $quantity = test_input($_POST['quantity']);
+    $order = test_input($_POST['order']);
+    $stmt = $conn->prepare("INSERT INTO order_items (item_id,order_id,price,quantity) VALUES (?,?,?,?)");
+    $stmt->bind_param('iidi', $item, $order, $price, $quantity);
+    if ($stmt->execute()) {
+        $_SESSION['success'] = 'Proizvod je uspješno dodan u narudžbu!';
+    };
 }
 
 
-?>
 
 
-<?php
 ?>
 
 <body class="">
@@ -23,193 +31,86 @@ if (!isset($_GET['order'])) {
             Tip 1: You can change the color of the sidebar using: data-color="blue | green | orange | red"
              -->
             <?php
-
-            include_once("includes/admin-sidebar.php");
-
+            include("includes/admin-sidebar.php");
             ?>
         </div>
         <div class="main-panel">
             <!-- Navbar -->
             <?php
-            include_once("includes/admin-navbar.php");
-
+            include("includes/admin-navbar.php");
             ?>
-
             <!-- End Navbar -->
             <div class="content">
 
-                <h3>Popis proizvoda</h3>
                 <div class="row">
-                    <table class="table  table-striped table-bordered table-hover">
-
-                        <thead>
-                            <tr>
-                                <th>Ime Proizvoda</th>
-                                <th>Cijena</th>
-                                <th class="text-center">Odabir</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            if (isset($_SESSION['success'])) {
-                                echo '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
-                                unset($_SESSION['success']);
-                            }
-                            ?>
+                    <div class="col-md-12">
+                        <div class="card ">
+                            <div class="card-header">
+                                <h4 class="card-title"> Dodaj Proizvod</h4>
+                            </div>
                             <div class="card-body">
+                                <?php
+                                if (isset($_SESSION['success'])) {
+                                    echo  '<div class="alert alert-success" role="alert">' . $_SESSION['success'] . '</div>';
+                                    unset($_SESSION['success']);
+                                }
 
-                                <div class="container">
-                                    <div class="row align-items-center justify-content-start">
-                                        <form action="buyers.php" method="post" enctype="multipart/form-data">
-                                            <div class="col-sm-3">
-                                                <input type="text" name="key" class="form-control" placeholder="Pretraga">
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <button class="btn btn-success btn-md" type="submit" name="search">Pretraži</button>
-                                            </div>
-                                            <div class="col-sm-3">
-                                                <div class="form-group ">
-                                                    <label for="inputState">Polja</label>
-                                                    <select id="inputState" class="form-control" style="background-color: black;" name="field">
-                                                        <option value="name">Ime</option>
-                                                        <option value="surname">Prezime</option>
-                                                        <option value="email">Email</option>
-                                                        <option value="address">Adresa</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </form>
+                                ?>
+                                <form class="needs-validation" novalidate method="POST" enctype="multipart/form-data">
 
-
+                                    <input type="hidden" value="<?php echo $_GET['order'] ?>" name="order">
+                                    <div class="form-group">
+                                        <label for="inputState">Proizvod</label>
+                                        <select class="custom-select" id="inputState" class="form-control" name="item" style="background-color: gray;">
+                                            <?php
+                                            $stmt = $conn->prepare("SELECT * FROM items");
+                                            $stmt->execute();
+                                            $results = $stmt->get_result();
+                                            while ($row1 = mysqli_fetch_assoc($results)) {
+                                            ?>
+                                                <option value="<?php echo $row1['id'] ?>"><?php echo $row1['name'] ?></option>
+                                            <?php
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
-                                </div>
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Cijena</label>
+                                        <input name="price" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="" required oninvalid="this.setCustomValidity('Unesite naslov!')" oninput="this.setCustomValidity('')">
+                                        <div class="valid-feedback">
+                                            Super!
+                                        </div>
+                                        <div class="invalid-feedback">
+                                            Molimo unesite cijenu.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Količina</label>
+                                        <input name="quantity" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="" required oninvalid="this.setCustomValidity('Unesite naslov!')" oninput="this.setCustomValidity('')">
+                                        <div class="valid-feedback">
+                                            Super!
+                                        </div>
+                                        <div class="invalid-feedback">
+                                            Molimo unesite količinu.
+                                        </div>
+                                    </div>
+                            </div>
 
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary" style="margin-left: 10px;" name="add">Dodaj</button>
 
-                                <?php
-                                $limit = isset($_SESSION['records-limit']) ? $_SESSION['records-limit'] : 10;
-                                if (isset($searchKey)) {
-                                    $search = "%" .  mysqli_real_escape_string($conn, $searchKey) . "%";
-                                    $field =   mysqli_real_escape_string($conn, $searchField);
-                                    $sql = "SELECT * FROM buyers WHERE $field LIKE ?"; // SQL with parameters
-                                    $stmt = $conn->prepare($sql);
-                                    $stmt->bind_param('s', $search);
-                                } else {
-                                    $sql = "SELECT DISTINCT items.*,order_items.* FROM items LEFT JOIN order_items
-                                    ON order_items.item_id = items.id AND order_items.order_id = ?
-                                    WHERE order_items.order_id IS NULL"; // SQL with parameters
-                                    $stmt = $conn->prepare($sql);
-                                    $stmt->bind_param('i', $_GET['order']);
-                                }
-                                $stmt->execute();
-                                $result = $stmt->get_result(); // get the mysqli result
-                                $allRecrods = mysqli_num_rows($result);
-                                // Calculate total pages
-                                $totoalPages = ceil($allRecrods / $limit);
-                                // Current pagination page number
-                                $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? $_GET['page'] : 1;
-                                $prev = $page - 1;
-                                $next = $page + 1;
-                                // Offset
-                                $paginationStart = ($page - 1) * $limit;
-
-                                if (isset($searchKey)) {
-                                    $sql = $conn->prepare("SELECT * FROM buyers WHERE name LIKE '?' LIMIT $paginationStart, $limit");
-                                    $stmt->bind_param('s', $search);
-                                    $sql->execute();
-                                    $resultsOrderItems = $sql->get_result();
-                                    echo $search;
-                                } else {
-                                    $sql = "SELECT DISTINCT items.*,order_items.* FROM items LEFT JOIN order_items
-                                    ON order_items.item_id = items.id AND order_items.order_id = ?
-                                    WHERE order_items.order_id IS NULL LIMIT $paginationStart, $limit"; // SQL with parameters
-                                    $stmt = $conn->prepare($sql);
-                                    $stmt->bind_param('i', $_GET['order']);
-                                    $stmt->execute();
-                                    $resultsOrderItems = $stmt->get_result();
-                                }
-                                while ($row = mysqli_fetch_assoc($resultsOrderItems)) {
-                                ?>
-                                    <tr>
-                                        <td><?php echo $row['name'] ?></td>
-                                        <td><?php echo $row['base_price'] ?></td>
-
-                                        <?php
-                                        $userAdmin = '';
-                                        ?>
-
-                                        <td class="td-actions text-center">
-                                            <div class="form-check">
-                                                <label class="form-check-label" style="font-size: 15px;">
-                                                    <input class="form-check-input" name="images[]" type="checkbox" value="<?php echo $row['name'] ?>">
-
-                                                    <span class="form-check-sign">
-                                                        <span class="check"></span>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        </td>
-                                        <?php include("includes/modals-order_items.php") ?>
-                                    </tr>
-                                <?php
-                                }
-                                ?>
-                        </tbody>
-                    </table>
+                            </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <!--Pagination-->
-                <nav class="d-flex justify-content-center wow fadeIn">
-                    <ul class="pagination pg-blue">
 
-                        <!--Arrow left-->
-                        <li class="page-item <?php if ($page <= 1) {
-                                                    echo 'disabled';
-                                                } ?> ">
-                            <a class="page-link" href="<?php if ($page <= 1) {
-                                                            echo '#';
-                                                        } else {
-                                                            echo '?page=' . $prev;
-                                                        } ?> " aria-label="Previous">
-                                <span aria-hidden="true"> &lArr;</span>
-                                <span class="sr-only">Previous</span>
-                            </a>
-                        </li>
-                        <?php
-                        for ($i = 1; $i <= $totoalPages; $i++) {
-                        ?>
-                            <li class="page-item <?php if ($page == $i) {
-                                                        echo 'active';
-                                                    }  ?>">
-                                <a class="page-link" href="<?php echo 'admin-users.php?page=' . $i ?>"><?php echo $i ?>
-                                    <?php if ($page == $i) {
-                                    ?>
-                                        <span class="sr-only">(current)</span>
-                                    <?php
-                                    } ?>
-
-                                </a>
-                            </li>
-
-                        <?php
-                        }
-                        ?>
-                        <li class="page-item <?php if ($page >= $totoalPages) {
-                                                    echo 'disabled';
-                                                } ?> ">
-                            <a class="page-link" href="<?php if ($page >= $totoalPages) {
-                                                            echo '#';
-                                                        } else {
-                                                            echo '?page=' . $next;
-                                                        } ?> " aria-label="Next">
-                                <span aria-hidden="true">&rArr;</span>
-                                <span class="sr-only">Next</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-                <!--Pagination-->
             </div>
-
         </div>
+
+    </div>
+    </div>
+    </div>
     </div>
     <?php
     //include_once("includes/admin-fixed-plugin.php");
