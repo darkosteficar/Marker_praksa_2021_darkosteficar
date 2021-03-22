@@ -10,7 +10,7 @@ $url = $_SERVER['REQUEST_URI'];
 <div class="sidebar-wrapper ">
     <div class="logo">
 
-        <a href="../home-page.php" class="simple-text logo-normal ml-3">
+        <a href="../index.php" class="simple-text logo-normal ml-3">
             HOME
         </a>
     </div>

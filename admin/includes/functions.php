@@ -630,7 +630,7 @@ function editItem()
 }
 
 
-function display_children($parent, $level, $level_colors)
+function display_children($parent, $level)
 {
 
     // retrieve all children of $parent 
@@ -652,7 +652,7 @@ function display_children($parent, $level, $level_colors)
         </div>
     <?php
 
-        display_children($row['id'], $level + 1, $level_colors);
+        display_children($row['id'], $level + 1);
     }
 }
 
@@ -680,6 +680,19 @@ function display_children2($parent, $level, $level_colors)
         ?>
     </ul>
 <?php
+}
+
+
+function displayCats()
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT id FROM categories WHERE parent_id = 0 ");
+    $stmt->execute();
+    $results = $stmt->get_result();
+    while ($row = mysqli_fetch_assoc($results)) {
+
+        display_children($row['id'], 0);
+    }
 }
 
 // End Items
@@ -1098,6 +1111,27 @@ function searchKeyWithField()
     }
     return array($searchKey, $searchField);
 }
+
+
+
+function display_children3($parent, $level)
+{
+
+    $array = array();
+    // retrieve all children of $parent 
+    global $conn, $allCategories;
+    $result = $conn->query('SELECT id,name FROM categories ' . 'WHERE parent_id="' . $parent . '";');
+    // display each child 
+
+    while ($row = mysqli_fetch_array($result)) {
+        // indent and display the title of this child 
+        $array[] = $row['id'];
+
+        display_children($row['id'], $level + 1);
+    }
+    return $array;
+}
+
 
 
 

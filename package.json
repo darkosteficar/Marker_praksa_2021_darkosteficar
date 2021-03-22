@@ -7,7 +7,7 @@
     "example": "root"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-css": "tailwindcss build src/styles.css -o public/styles.css"
   },
   "repository": {
     "type": "git",
@@ -37,13 +37,17 @@
     "url": "https://github.com/creativetimofficial/black-dashboard/issues"
   },
   "devDependencies": {
+    "autoprefixer": "^10.2.5",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^5.0.0",
     "gulp-clean": "^0.4.0",
     "gulp-install": "^1.1.0",
+    "gulp-open": "^3.0.1",
     "gulp-sass": "^4.0.1",
     "gulp-sourcemaps": "^2.6.4",
-    "gulp-open": "^3.0.1"
+    "postcss": "^8.2.8",
+    "tailwindcss": "^2.0.3"
   },
-  "homepage": "http://demos.creative-tim.com/black-dashboard/examples/dashboard.html?_ga=2.143239282.69692347.1519629130-329288944.1519374311"
+  "homepage": "http://demos.creative-tim.com/black-dashboard/examples/dashboard.html?_ga=2.143239282.69692347.1519629130-329288944.1519374311",
+  "dependencies": {}
 }

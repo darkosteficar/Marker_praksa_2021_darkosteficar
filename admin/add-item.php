@@ -194,15 +194,7 @@ while ($row = mysqli_fetch_assoc($resultsCategories)) {
 
                                             <label for="" style="font-size: 20px;font-weight:600">Kategorije:</label>
                                             <?php
-                                            $level_colors = array();
-                                            $level_colors[] = 'blue';
-                                            $level_colors[] = 'green';
-                                            $level_colors[] = 'red';
-                                            $level_colors[] = 'orange';
-
-                                            display_children(2, 0, $level_colors);
-                                            echo "<br>";
-                                            display_children(6, 0, $level_colors);
+                                            displayCats();
 
                                             ?>
 

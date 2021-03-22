@@ -207,9 +207,7 @@ while ($row = mysqli_fetch_assoc($resultsCategories)) {
                                             $level_colors[] = 'red';
                                             $level_colors[] = 'orange';
 
-                                            display_children(1, 0, $level_colors);
-                                            echo "<br>";
-                                            display_children(6, 0, $level_colors);
+                                            displayCats();
 
                                             ?>
 
